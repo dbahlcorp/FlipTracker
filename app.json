@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.dbahlcorp.fliptracker",
-      "buildNumber": "3",
+      "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
         "CFBundleDisplayName": "Flip Tracker",
@@ -53,6 +53,9 @@
         "projectId": "95332259-9c93-41ac-829b-7ff58432cb57"
       }
     },
-    "owner": "dbahlcorp"
+    "owner": "dbahlcorp",
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
