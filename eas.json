@@ -27,9 +27,9 @@
   "submit": {
     "production": {
       "ios": {
-        "appleId": "",
-        "ascAppId": "",
-        "appleTeamId": ""
+        "appleId": "dbahlcorp@icloud.com",
+        "ascAppId": "6762460849",
+        "appleTeamId": "GPKK39R82X"
       }
     }
   }

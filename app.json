@@ -24,13 +24,16 @@
         "NSCameraUsageDescription": "This app does not use the camera.",
         "CFBundleDisplayName": "Flip Tracker",
         "CFBundleShortVersionString": "1.0.0",
-        "LSApplicationQueriesSchemes": []
+        "LSApplicationQueriesSchemes": [],
+        "ITSAppUsesNonExemptEncryption": false
       },
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {
             "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
-            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+            "NSPrivacyAccessedAPITypeReasons": [
+              "CA92.1"
+            ]
           }
         ]
       }
@@ -58,8 +61,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "95332259-9c93-41ac-829b-7ff58432cb57"
       }
-    }
+    },
+    "owner": "dbahlcorp"
   }
 }
