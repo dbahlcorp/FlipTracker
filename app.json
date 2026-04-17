@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.dbahlcorp.fliptracker",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
         "CFBundleDisplayName": "Flip Tracker",
@@ -48,17 +48,6 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "deploymentTarget": "15.1",
-            "useFrameworks": "static"
-          }
-        }
-      ]
-    ],
     "extra": {
       "eas": {
         "projectId": "95332259-9c93-41ac-829b-7ff58432cb57"
