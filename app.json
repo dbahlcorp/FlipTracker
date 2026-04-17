@@ -18,8 +18,8 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.dbahlcorp.fliptracker",
-      "buildNumber": "4",
+      "bundleIdentifier": "com.bahlcorp.fliptracker",
+      "buildNumber": "7",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
         "CFBundleDisplayName": "Flip Tracker",
