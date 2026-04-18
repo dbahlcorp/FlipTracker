@@ -32,6 +32,8 @@ export default function MyFlipsScreen({ navigation }) {
     setFlips(updated);
   };
 
+  const handleEdit = (flip) => navigation.navigate('EditFlip', { flip });
+
   const filtered = flips.filter((f) => {
     const matchSearch = f.itemName.toLowerCase().includes(search.toLowerCase());
     const matchPlatform = platformFilter === 'All' || f.platform === platformFilter;
@@ -118,7 +120,7 @@ export default function MyFlipsScreen({ navigation }) {
           data={filtered}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <FlipCard flip={item} onDelete={handleDelete} />
+            <FlipCard flip={item} onDelete={handleDelete} onPress={handleEdit} />
           )}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}

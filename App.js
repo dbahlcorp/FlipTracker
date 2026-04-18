@@ -11,6 +11,7 @@ import DashboardScreen from './src/screens/DashboardScreen';
 import MyFlipsScreen from './src/screens/MyFlipsScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import AddFlipScreen from './src/screens/AddFlipScreen';
+import EditFlipScreen from './src/screens/EditFlipScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -45,6 +46,11 @@ function FlipsStack() {
         name="AddFlip"
         component={AddFlipScreen}
         options={{ title: 'Add Flip', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="EditFlip"
+        component={EditFlipScreen}
+        options={{ title: 'Edit Flip', presentation: 'modal' }}
       />
     </Stack.Navigator>
   );
