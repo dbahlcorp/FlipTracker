@@ -124,6 +124,7 @@ export default function MyFlipsScreen({ navigation }) {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
+          style={styles.sortScroll}
           contentContainerStyle={styles.sortContent}
         >
           {SORTS.map((s) => (
@@ -214,6 +215,7 @@ const makeStyles = (t) =>
       paddingVertical: 6,
     },
     countText: { fontSize: 13, color: t.textFaint, fontWeight: '500', marginRight: 10 },
+    sortScroll: { flex: 1 },
     sortContent: { flexDirection: 'row', gap: 6, paddingRight: 16 },
     sortChip: {
       paddingHorizontal: 10,

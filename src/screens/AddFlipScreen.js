@@ -14,6 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { addFlip } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 const CATEGORIES = ['Phones', 'Laptops', 'Headphones', 'Watches', 'Tablets', 'Other'];
 const CONDITIONS = ['Like New', 'Good', 'Fair', 'Parts Only'];
@@ -62,6 +63,7 @@ function InputField({ label, placeholder, value, onChange, keyboardType = 'defau
 
 export default function AddFlipScreen({ navigation }) {
   const { theme } = useTheme();
+  const { symbol } = useCurrency();
   const styles = makeStyles(theme);
 
   const [form, setForm] = useState({
@@ -157,7 +159,7 @@ export default function AddFlipScreen({ navigation }) {
               value={form.buyPrice}
               onChange={set('buyPrice')}
               keyboardType="decimal-pad"
-              prefix="$"
+              prefix={symbol}
               theme={theme}
               styles={styles}
             />
@@ -169,7 +171,7 @@ export default function AddFlipScreen({ navigation }) {
               value={form.sellPrice}
               onChange={set('sellPrice')}
               keyboardType="decimal-pad"
-              prefix="$"
+              prefix={symbol}
               theme={theme}
               styles={styles}
             />
@@ -197,7 +199,7 @@ export default function AddFlipScreen({ navigation }) {
           ]}>
             <Text style={styles.profitLabel}>Profit Preview</Text>
             <Text style={[styles.profitValue, { color: previewProfit >= 0 ? '#22c55e' : '#ef4444' }]}>
-              {previewProfit >= 0 ? '+' : ''}${previewProfit.toFixed(2)}
+              {previewProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(previewProfit).toFixed(2)}
             </Text>
           </View>
         ) : null}
