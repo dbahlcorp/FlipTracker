@@ -105,7 +105,7 @@ export default function DashboardScreen() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: theme.bg }}>
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
@@ -262,7 +262,7 @@ export default function DashboardScreen() {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-    </>
+    </View>
   );
 }
 

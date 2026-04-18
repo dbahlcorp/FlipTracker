@@ -52,13 +52,13 @@ export const loadGoal = async () => {
   try {
     const val = await AsyncStorage.getItem(GOAL_KEY);
     return val ? parseFloat(val) : 0;
-  } catch { return 0; }
+  } catch (e) { return 0; }
 };
 
 export const saveGoal = async (goal) => {
   try {
     await AsyncStorage.setItem(GOAL_KEY, String(goal));
-  } catch {}
+  } catch (e) {}
 };
 
 export const calcProfit = (flip) => {

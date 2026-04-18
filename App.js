@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Alert, Text } from 'react-native';
+import { View, TouchableOpacity, Alert, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -114,10 +114,10 @@ function AppNavigator() {
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,
           headerRight: () => (
-            <>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <CurrencySelector />
               <ThemeToggle />
-            </>
+            </View>
           ),
         })}
       >
