@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { BarChart } from 'react-native-chart-kit';
 import { loadFlips, calcProfit } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CATEGORIES = ['Phones', 'Laptops', 'Headphones', 'Watches', 'Tablets', 'Other'];
@@ -24,6 +25,7 @@ const PLATFORM_SHORT = {
 
 export default function AnalyticsScreen() {
   const { theme } = useTheme();
+  const { symbol } = useCurrency();
   const styles = makeStyles(theme);
 
   const [flips, setFlips] = useState([]);
@@ -91,7 +93,7 @@ export default function AnalyticsScreen() {
         {bestFlip.itemName ? (
           <View style={styles.bestFlipContent}>
             <Text style={styles.bestFlipName}>{bestFlip.itemName}</Text>
-            <Text style={styles.bestFlipProfit}>+${bestFlip.profit.toFixed(2)}</Text>
+            <Text style={styles.bestFlipProfit}>+{symbol}{bestFlip.profit.toFixed(2)}</Text>
           </View>
         ) : (
           <Text style={styles.bestFlipEmpty}>No sold flips yet</Text>
@@ -104,18 +106,18 @@ export default function AnalyticsScreen() {
         <View style={styles.finRow}>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Total Invested</Text>
-            <Text style={styles.finValue}>${totalInvested.toFixed(2)}</Text>
+            <Text style={styles.finValue}>{symbol}{totalInvested.toFixed(2)}</Text>
           </View>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Total Revenue</Text>
-            <Text style={styles.finValue}>${totalRevenue.toFixed(2)}</Text>
+            <Text style={styles.finValue}>{symbol}{totalRevenue.toFixed(2)}</Text>
           </View>
         </View>
         <View style={styles.finRow}>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Net Profit</Text>
             <Text style={[styles.finValue, { color: totalProfit >= 0 ? '#22c55e' : '#ef4444', fontSize: 24 }]}>
-              {totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)}
+              {totalProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(totalProfit).toFixed(2)}
             </Text>
           </View>
           <View style={styles.finCard}>
@@ -136,7 +138,7 @@ export default function AnalyticsScreen() {
             data={platformChartData}
             width={SCREEN_WIDTH - 64}
             height={180}
-            yAxisLabel="$"
+            yAxisLabel={symbol}
             fromZero
             chartConfig={{
               backgroundColor: theme.chartBg,
@@ -182,7 +184,7 @@ export default function AnalyticsScreen() {
                 </View>
               </View>
               <Text style={[styles.catProfit, { color: c.profit >= 0 ? '#22c55e' : '#ef4444' }]}>
-                {c.profit >= 0 ? '+' : ''}${c.profit.toFixed(2)}
+                {c.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(c.profit).toFixed(2)}
               </Text>
             </View>
           ))

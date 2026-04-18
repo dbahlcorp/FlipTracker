@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity } from 'react-native';
+import { TouchableOpacity, Alert, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -7,6 +7,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { CurrencyProvider, useCurrency, CURRENCIES } from './src/context/CurrencyContext';
 import DashboardScreen from './src/screens/DashboardScreen';
 import MyFlipsScreen from './src/screens/MyFlipsScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
@@ -25,6 +26,31 @@ function ThemeToggle() {
         size={22}
         color={theme.headerText}
       />
+    </TouchableOpacity>
+  );
+}
+
+function CurrencySelector() {
+  const { currency, setCurrency } = useCurrency();
+  const { theme } = useTheme();
+
+  const showPicker = () => {
+    Alert.alert(
+      'Select Currency',
+      null,
+      [
+        ...Object.entries(CURRENCIES).map(([code, sym]) => ({
+          text: `${code}  ${sym}`,
+          onPress: () => setCurrency(code),
+        })),
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  return (
+    <TouchableOpacity onPress={showPicker} style={{ marginRight: 4, padding: 4 }}>
+      <Text style={{ color: theme.headerText, fontWeight: '700', fontSize: 13 }}>{currency}</Text>
     </TouchableOpacity>
   );
 }
@@ -87,7 +113,12 @@ function AppNavigator() {
           headerTintColor: theme.headerText,
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,
-          headerRight: () => <ThemeToggle />,
+          headerRight: () => (
+            <>
+              <CurrencySelector />
+              <ThemeToggle />
+            </>
+          ),
         })}
       >
         <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
@@ -101,7 +132,9 @@ function AppNavigator() {
 export default function App() {
   return (
     <ThemeProvider>
-      <AppNavigator />
+      <CurrencyProvider>
+        <AppNavigator />
+      </CurrencyProvider>
     </ThemeProvider>
   );
 }

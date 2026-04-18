@@ -3,6 +3,7 @@ import {
   View,
   Text,
   TextInput,
+  Image,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
@@ -10,6 +11,7 @@ import {
   Alert,
   KeyboardAvoidingView,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { updateFlip } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 
@@ -75,10 +77,30 @@ export default function EditFlipScreen({ navigation, route }) {
     status: existing.status ?? 'Active',
     dateBought: existing.dateBought ?? '',
     dateSold: existing.dateSold ?? '',
+    notes: existing.notes ?? '',
+    photo: existing.photo ?? '',
   });
   const [saving, setSaving] = useState(false);
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+
+  const pickPhoto = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow photo library access to add photos.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.4,
+      base64: true,
+    });
+    if (!result.canceled && result.assets[0].base64) {
+      set('photo')(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.itemName.trim()) {
@@ -232,6 +254,45 @@ export default function EditFlipScreen({ navigation, route }) {
           </View>
         </View>
 
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Notes</Text>
+          <View style={[styles.inputWrapper, styles.notesWrapper]}>
+            <TextInput
+              style={[styles.input, styles.notesInput]}
+              placeholder="Serial number, listing URL, buyer info..."
+              placeholderTextColor={theme.placeholder}
+              value={form.notes}
+              onChangeText={set('notes')}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+          </View>
+        </View>
+
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>Photo</Text>
+          {form.photo ? (
+            <View style={styles.photoContainer}>
+              <Image source={{ uri: form.photo }} style={styles.photoPreview} />
+              <TouchableOpacity style={styles.photoAction} onPress={pickPhoto}>
+                <Text style={styles.photoActionText}>Change</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.photoAction, styles.photoRemove]}
+                onPress={() => set('photo')('')}
+              >
+                <Text style={[styles.photoActionText, { color: '#ef4444' }]}>Remove</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
+              <Text style={styles.photoBtnIcon}>📷</Text>
+              <Text style={styles.photoBtnText}>Add Photo</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         <TouchableOpacity
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
@@ -266,9 +327,11 @@ const makeStyles = (t) =>
       borderColor: t.borderStrong,
       paddingHorizontal: 12,
     },
+    notesWrapper: { alignItems: 'flex-start', paddingVertical: 4 },
     prefix: { fontSize: 16, color: t.textMuted, marginRight: 4 },
     input: { flex: 1, fontSize: 15, color: t.text, paddingVertical: 12 },
     inputWithPrefix: { paddingLeft: 0 },
+    notesInput: { height: 80, paddingTop: 8 },
     pickerRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
       paddingHorizontal: 12,
@@ -293,6 +356,31 @@ const makeStyles = (t) =>
     },
     profitLabel: { fontSize: 14, color: t.textSub, fontWeight: '600' },
     profitValue: { fontSize: 22, fontWeight: '800' },
+    photoBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: t.card,
+      borderRadius: 10,
+      borderWidth: 1.5,
+      borderColor: t.borderStrong,
+      paddingVertical: 20,
+      gap: 8,
+    },
+    photoBtnIcon: { fontSize: 22 },
+    photoBtnText: { fontSize: 15, color: t.textMuted, fontWeight: '500' },
+    photoContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    photoPreview: { width: 80, height: 80, borderRadius: 10 },
+    photoAction: {
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      borderRadius: 8,
+      borderWidth: 1.5,
+      borderColor: t.borderStrong,
+      backgroundColor: t.card,
+    },
+    photoRemove: { borderColor: '#fca5a5' },
+    photoActionText: { fontSize: 13, fontWeight: '600', color: t.textMuted },
     saveBtn: {
       backgroundColor: '#22c55e',
       borderRadius: 12,

@@ -9,12 +9,13 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, deleteFlip } from '../utils/storage';
+import { loadFlips, deleteFlip, updateFlip, calcProfit } from '../utils/storage';
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
 
 const PLATFORMS = ['All', 'Facebook Marketplace', 'eBay', 'Kijiji', 'Other'];
 const STATUSES = ['All', 'Active', 'Pending', 'Sold'];
+const SORTS = ['Newest', 'Oldest', 'Profit ↑', 'Profit ↓', 'Price ↑', 'A-Z'];
 
 export default function MyFlipsScreen({ navigation }) {
   const { theme } = useTheme();
@@ -24,6 +25,7 @@ export default function MyFlipsScreen({ navigation }) {
   const [search, setSearch] = useState('');
   const [platformFilter, setPlatformFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('Newest');
 
   useFocusEffect(useCallback(() => { loadFlips().then(setFlips); }, []));
 
@@ -34,11 +36,27 @@ export default function MyFlipsScreen({ navigation }) {
 
   const handleEdit = (flip) => navigation.navigate('EditFlip', { flip });
 
+  const handleStatusChange = async (id, newStatus) => {
+    const updated = await updateFlip(id, { status: newStatus });
+    setFlips(updated);
+  };
+
   const filtered = flips.filter((f) => {
     const matchSearch = f.itemName.toLowerCase().includes(search.toLowerCase());
     const matchPlatform = platformFilter === 'All' || f.platform === platformFilter;
     const matchStatus = statusFilter === 'All' || f.status === statusFilter;
     return matchSearch && matchPlatform && matchStatus;
+  });
+
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case 'Oldest':   return new Date(a.createdAt) - new Date(b.createdAt);
+      case 'Profit ↑': return calcProfit(b) - calcProfit(a);
+      case 'Profit ↓': return calcProfit(a) - calcProfit(b);
+      case 'Price ↑':  return (parseFloat(b.buyPrice) || 0) - (parseFloat(a.buyPrice) || 0);
+      case 'A-Z':      return a.itemName.localeCompare(b.itemName);
+      default:         return new Date(b.createdAt) - new Date(a.createdAt);
+    }
   });
 
   return (
@@ -101,11 +119,28 @@ export default function MyFlipsScreen({ navigation }) {
 
       <View style={styles.countRow}>
         <Text style={styles.countText}>
-          {filtered.length} {filtered.length === 1 ? 'flip' : 'flips'}
+          {sorted.length} {sorted.length === 1 ? 'flip' : 'flips'}
         </Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sortContent}
+        >
+          {SORTS.map((s) => (
+            <TouchableOpacity
+              key={s}
+              style={[styles.sortChip, sortBy === s && styles.sortChipActive]}
+              onPress={() => setSortBy(s)}
+            >
+              <Text style={[styles.sortChipText, sortBy === s && styles.sortChipTextActive]}>
+                {s}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
-      {filtered.length === 0 ? (
+      {sorted.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>📦</Text>
           <Text style={styles.emptyTitle}>No flips found</Text>
@@ -117,10 +152,15 @@ export default function MyFlipsScreen({ navigation }) {
         </View>
       ) : (
         <FlatList
-          data={filtered}
+          data={sorted}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <FlipCard flip={item} onDelete={handleDelete} onPress={handleEdit} />
+            <FlipCard
+              flip={item}
+              onDelete={handleDelete}
+              onPress={handleEdit}
+              onStatusChange={handleStatusChange}
+            />
           )}
           contentContainerStyle={styles.list}
           showsVerticalScrollIndicator={false}
@@ -167,8 +207,25 @@ const makeStyles = (t) =>
     filterChipActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
     filterChipText: { fontSize: 13, color: t.textMuted, fontWeight: '500' },
     filterChipTextActive: { color: '#fff', fontWeight: '700' },
-    countRow: { paddingHorizontal: 16, paddingVertical: 8 },
-    countText: { fontSize: 13, color: t.textFaint, fontWeight: '500' },
+    countRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingLeft: 16,
+      paddingVertical: 6,
+    },
+    countText: { fontSize: 13, color: t.textFaint, fontWeight: '500', marginRight: 10 },
+    sortContent: { flexDirection: 'row', gap: 6, paddingRight: 16 },
+    sortChip: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+      backgroundColor: t.card,
+      borderWidth: 1,
+      borderColor: t.borderStrong,
+    },
+    sortChipActive: { backgroundColor: t.isDark ? '#1e3a5f' : '#dbeafe', borderColor: '#3b82f6' },
+    sortChipText: { fontSize: 11, color: t.textFaint, fontWeight: '500' },
+    sortChipTextActive: { color: t.isDark ? '#60a5fa' : '#2563eb', fontWeight: '700' },
     list: { paddingTop: 4, paddingBottom: 100 },
     emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 },
     emptyIcon: { fontSize: 48, marginBottom: 12 },

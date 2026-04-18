@@ -2,14 +2,17 @@ import React, { useRef } from 'react';
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   Animated,
   PanResponder,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { calcProfit } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
+import { useCurrency } from '../context/CurrencyContext';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = -80;
@@ -20,8 +23,11 @@ const STATUS_COLORS = {
   Pending: { lightBg: '#fef9c3', darkBg: '#422006', lightText: '#a16207', darkText: '#fbbf24' },
 };
 
-export default function FlipCard({ flip, onDelete, onPress }) {
+const STATUSES = ['Active', 'Pending', 'Sold'];
+
+export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   const { theme } = useTheme();
+  const { symbol } = useCurrency();
   const styles = makeStyles(theme);
 
   const translateX = useRef(new Animated.Value(0)).current;
@@ -62,6 +68,17 @@ export default function FlipCard({ flip, onDelete, onPress }) {
     }).start(() => onDelete(flip.id));
   };
 
+  const handleLongPress = () => {
+    if (!onStatusChange) return;
+    Alert.alert('Change Status', flip.itemName, [
+      ...STATUSES.map((status) => ({
+        text: status === flip.status ? `${status} ✓` : status,
+        onPress: () => onStatusChange(flip.id, status),
+      })),
+      { text: 'Cancel', style: 'cancel' },
+    ]);
+  };
+
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.deleteBack, { opacity: deleteOpacity }]}>
@@ -77,9 +94,13 @@ export default function FlipCard({ flip, onDelete, onPress }) {
         <TouchableOpacity
           style={styles.card}
           onPress={() => onPress && onPress(flip)}
+          onLongPress={handleLongPress}
           activeOpacity={0.85}
         >
           <View style={styles.row}>
+            {flip.photo ? (
+              <Image source={{ uri: flip.photo }} style={styles.photo} />
+            ) : null}
             <View style={styles.left}>
               <Text style={styles.itemName} numberOfLines={1}>
                 {flip.itemName}
@@ -91,10 +112,13 @@ export default function FlipCard({ flip, onDelete, onPress }) {
                 <Text style={styles.dot}>·</Text>
                 <Text style={styles.meta}>{flip.platform}</Text>
               </View>
+              {flip.notes ? (
+                <Text style={styles.notes} numberOfLines={2}>{flip.notes}</Text>
+              ) : null}
             </View>
             <View style={styles.right}>
               <Text style={[styles.profit, { color: profitColor }]}>
-                {profit >= 0 ? '+' : ''}${profit.toFixed(2)}
+                {profit >= 0 ? '+' : '-'}{symbol}{Math.abs(profit).toFixed(2)}
               </Text>
               <View style={[styles.badge, { backgroundColor: statusBg }]}>
                 <Text style={[styles.badgeText, { color: statusText }]}>
@@ -107,19 +131,19 @@ export default function FlipCard({ flip, onDelete, onPress }) {
           <View style={styles.priceRow}>
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Bought</Text>
-              <Text style={styles.priceValue}>${parseFloat(flip.buyPrice || 0).toFixed(2)}</Text>
+              <Text style={styles.priceValue}>{symbol}{parseFloat(flip.buyPrice || 0).toFixed(2)}</Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Sold</Text>
               <Text style={styles.priceValue}>
-                {flip.sellPrice ? `$${parseFloat(flip.sellPrice).toFixed(2)}` : '—'}
+                {flip.sellPrice ? `${symbol}${parseFloat(flip.sellPrice).toFixed(2)}` : '—'}
               </Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Fees</Text>
-              <Text style={styles.priceValue}>${parseFloat(flip.fees || 0).toFixed(2)}</Text>
+              <Text style={styles.priceValue}>{symbol}{parseFloat(flip.fees || 0).toFixed(2)}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -166,6 +190,12 @@ const makeStyles = (t) =>
       alignItems: 'flex-start',
       marginBottom: 10,
     },
+    photo: {
+      width: 56,
+      height: 56,
+      borderRadius: 8,
+      marginRight: 10,
+    },
     left: { flex: 1, marginRight: 10 },
     right: { alignItems: 'flex-end' },
     itemName: {
@@ -177,6 +207,12 @@ const makeStyles = (t) =>
     metaRow: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
     meta: { fontSize: 12, color: t.textMuted },
     dot: { fontSize: 12, color: t.borderStrong, marginHorizontal: 4 },
+    notes: {
+      fontSize: 12,
+      color: t.textFaint,
+      marginTop: 4,
+      fontStyle: 'italic',
+    },
     profit: { fontSize: 18, fontWeight: '700', marginBottom: 6 },
     badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
     badgeText: { fontSize: 11, fontWeight: '600' },

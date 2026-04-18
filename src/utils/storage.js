@@ -46,6 +46,21 @@ export const deleteFlip = async (id) => {
   return updated;
 };
 
+const GOAL_KEY = '@flip_tracker_goal';
+
+export const loadGoal = async () => {
+  try {
+    const val = await AsyncStorage.getItem(GOAL_KEY);
+    return val ? parseFloat(val) : 0;
+  } catch { return 0; }
+};
+
+export const saveGoal = async (goal) => {
+  try {
+    await AsyncStorage.setItem(GOAL_KEY, String(goal));
+  } catch {}
+};
+
 export const calcProfit = (flip) => {
   const sell = parseFloat(flip.sellPrice) || 0;
   const buy = parseFloat(flip.buyPrice) || 0;
