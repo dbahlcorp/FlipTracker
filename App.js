@@ -13,6 +13,7 @@ import MyFlipsScreen from './src/screens/MyFlipsScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
 import AddFlipScreen from './src/screens/AddFlipScreen';
 import EditFlipScreen from './src/screens/EditFlipScreen';
+import CalendarScreen from './src/screens/CalendarScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -95,6 +96,7 @@ function AppNavigator() {
               Dashboard: focused ? 'grid' : 'grid-outline',
               Flips: focused ? 'albums' : 'albums-outline',
               Analytics: focused ? 'bar-chart' : 'bar-chart-outline',
+              Calendar: focused ? 'calendar' : 'calendar-outline',
             };
             return <Ionicons name={icons[route.name]} size={size} color={color} />;
           },
@@ -124,6 +126,7 @@ function AppNavigator() {
         <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
         <Tab.Screen name="Flips" component={FlipsStack} options={{ headerShown: false, title: 'My Flips' }} />
         <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: 'Analytics' }} />
+        <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
       </Tab.Navigator>
     </NavigationContainer>
   );
