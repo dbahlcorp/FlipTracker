@@ -98,19 +98,26 @@ function AppNavigator() {
               Analytics: focused ? 'bar-chart' : 'bar-chart-outline',
               Calendar: focused ? 'calendar' : 'calendar-outline',
             };
-            return <Ionicons name={icons[route.name]} size={size} color={color} />;
+            return <Ionicons name={icons[route.name]} size={26} color={color} />;
           },
           tabBarActiveTintColor: '#22c55e',
           tabBarInactiveTintColor: theme.textFaint,
           tabBarStyle: {
             backgroundColor: theme.tabBar,
-            borderTopWidth: 1,
-            borderTopColor: theme.tabBarBorder,
-            paddingBottom: 5,
-            paddingTop: 5,
-            height: 60,
+            borderTopWidth: 0,
+            elevation: 0,
+            shadowOpacity: 0,
+            paddingBottom: 10,
+            paddingTop: 8,
+            height: 68,
           },
-          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+          tabBarLabelStyle: {
+            fontSize: 10,
+            fontWeight: '700',
+            letterSpacing: 0.8,
+            textTransform: 'uppercase',
+            marginTop: 2,
+          },
           headerStyle: { backgroundColor: theme.header },
           headerTintColor: theme.headerText,
           headerTitleStyle: { fontWeight: '700' },
