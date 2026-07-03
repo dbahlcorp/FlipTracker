@@ -341,7 +341,7 @@ export default function CalendarScreen() {
 
         <View style={styles.yearGrid}>
           {Array.from({ length: 12 }, (_, i) => {
-            const mKey = `${navYear}-${String(i + 1).padStart(2, '00')}`;
+            const mKey = `${navYear}-${String(i + 1).padStart(2, '0')}`;
             const stats = byMonth[mKey] || { profit: 0, revenue: 0, count: 0 };
             const isCurrent = i === todayDate.getMonth() && navYear === todayDate.getFullYear();
             const barWidth = stats.count > 0

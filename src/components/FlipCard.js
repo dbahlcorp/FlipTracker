@@ -13,6 +13,7 @@ import {
 import { calcProfit } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { STATUSES } from '../constants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SWIPE_THRESHOLD = -80;
@@ -22,8 +23,6 @@ const STATUS_COLORS = {
   Active:  { lightBg: '#dbeafe', darkBg: '#1e3a5f', lightText: '#2563eb', darkText: '#60a5fa' },
   Pending: { lightBg: '#fef9c3', darkBg: '#422006', lightText: '#a16207', darkText: '#fbbf24' },
 };
-
-const STATUSES = ['Active', 'Pending', 'Sold'];
 
 export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   const { theme } = useTheme();

@@ -18,6 +18,7 @@ import { loadFlips, calcProfit, loadGoal, saveGoal } from '../utils/storage';
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { PLATFORMS } from '../constants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -88,8 +89,7 @@ export default function DashboardScreen() {
     datasets: [{ data: monthlyData.map((m) => m.value) }],
   };
 
-  const platforms = ['Facebook Marketplace', 'eBay', 'Kijiji', 'Other'];
-  const platformData = platforms
+  const platformData = PLATFORMS
     .map((p) => {
       const pFlips = flips.filter((f) => f.platform === p);
       const pProfit = pFlips.reduce((sum, f) => sum + calcProfit(f), 0);

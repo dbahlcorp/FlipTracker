@@ -12,16 +12,9 @@ import { BarChart } from 'react-native-chart-kit';
 import { loadFlips, calcProfit } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { CATEGORIES, PLATFORMS, PLATFORM_SHORT } from '../constants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const CATEGORIES = ['Phones', 'Laptops', 'Headphones', 'Watches', 'Tablets', 'Other'];
-const PLATFORMS = ['Facebook Marketplace', 'eBay', 'Kijiji', 'Other'];
-const PLATFORM_SHORT = {
-  'Facebook Marketplace': 'FB Mkt',
-  eBay: 'eBay',
-  Kijiji: 'Kijiji',
-  Other: 'Other',
-};
 
 export default function AnalyticsScreen() {
   const { theme } = useTheme();

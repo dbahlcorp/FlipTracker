@@ -12,9 +12,10 @@ import { useFocusEffect } from '@react-navigation/native';
 import { loadFlips, deleteFlip, updateFlip, calcProfit } from '../utils/storage';
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
+import { PLATFORMS as PLATFORM_OPTIONS, STATUSES as STATUS_OPTIONS } from '../constants';
 
-const PLATFORMS = ['All', 'Facebook Marketplace', 'eBay', 'Kijiji', 'Other'];
-const STATUSES = ['All', 'Active', 'Pending', 'Sold'];
+const PLATFORMS = ['All', ...PLATFORM_OPTIONS];
+const STATUSES = ['All', ...STATUS_OPTIONS];
 const SORTS = ['Newest', 'Oldest', 'Profit ↑', 'Profit ↓', 'Price ↑', 'A-Z'];
 
 export default function MyFlipsScreen({ navigation }) {
@@ -42,7 +43,7 @@ export default function MyFlipsScreen({ navigation }) {
   };
 
   const filtered = flips.filter((f) => {
-    const matchSearch = f.itemName.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = (f.itemName || '').toLowerCase().includes(search.toLowerCase());
     const matchPlatform = platformFilter === 'All' || f.platform === platformFilter;
     const matchStatus = statusFilter === 'All' || f.status === statusFilter;
     return matchSearch && matchPlatform && matchStatus;
@@ -51,10 +52,10 @@ export default function MyFlipsScreen({ navigation }) {
   const sorted = [...filtered].sort((a, b) => {
     switch (sortBy) {
       case 'Oldest':   return new Date(a.createdAt) - new Date(b.createdAt);
-      case 'Profit ↑': return calcProfit(b) - calcProfit(a);
-      case 'Profit ↓': return calcProfit(a) - calcProfit(b);
-      case 'Price ↑':  return (parseFloat(b.buyPrice) || 0) - (parseFloat(a.buyPrice) || 0);
-      case 'A-Z':      return a.itemName.localeCompare(b.itemName);
+      case 'Profit ↑': return calcProfit(a) - calcProfit(b);
+      case 'Profit ↓': return calcProfit(b) - calcProfit(a);
+      case 'Price ↑':  return (parseFloat(a.buyPrice) || 0) - (parseFloat(b.buyPrice) || 0);
+      case 'A-Z':      return (a.itemName || '').localeCompare(b.itemName || '');
       default:         return new Date(b.createdAt) - new Date(a.createdAt);
     }
   });
