@@ -2,7 +2,7 @@
   "expo": {
     "name": "Flip Tracker",
     "slug": "flip-tracker",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -19,12 +19,12 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.bahlcorp.fliptracker",
-      "buildNumber": "14",
+      "buildNumber": "17",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
         "NSPhotoLibraryUsageDescription": "Add photos to your flips.",
         "CFBundleDisplayName": "Flip Tracker",
-        "CFBundleShortVersionString": "1.0.0",
+        "CFBundleShortVersionString": "1.0.1",
         "LSApplicationQueriesSchemes": [],
         "ITSAppUsesNonExemptEncryption": false
       },
