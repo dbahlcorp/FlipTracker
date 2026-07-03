@@ -48,7 +48,6 @@ export default function DashboardScreen() {
     setRefreshing(false);
   };
 
-  const totalProfit = flips.reduce((sum, f) => sum + calcProfit(f), 0);
   const totalFlips = flips.length;
   const activeListings = flips.filter((f) => f.status === 'Active').length;
   const soldFlips = flips.filter((f) => f.status === 'Sold');
@@ -74,12 +73,18 @@ export default function DashboardScreen() {
     return { label: MONTH_LABELS[month], value: monthProfit };
   });
 
-  const currentMonthProfit = flips
-    .filter((f) => {
-      const date = new Date(f.dateSold || f.dateBought || f.createdAt);
-      return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-    })
-    .reduce((sum, f) => sum + Math.max(calcProfit(f), 0), 0);
+  const thisMonthFlips = flips.filter((f) => {
+    const date = new Date(f.dateSold || f.dateBought || f.createdAt);
+    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+  });
+  const thisMonthProfit = thisMonthFlips.reduce((sum, f) => sum + calcProfit(f), 0);
+  const currentMonthProfit = thisMonthFlips.reduce((sum, f) => sum + Math.max(calcProfit(f), 0), 0);
+
+  const thisYearProfit = flips
+    .filter((f) => new Date(f.dateSold || f.dateBought || f.createdAt).getFullYear() === now.getFullYear())
+    .reduce((sum, f) => sum + calcProfit(f), 0);
+
+  const allTimeProfit = flips.reduce((sum, f) => sum + calcProfit(f), 0);
 
   const goalProgress = goal > 0 ? Math.min(currentMonthProfit / goal, 1) : 0;
   const goalBarColor = goalProgress >= 1 ? '#22c55e' : goalProgress >= 0.5 ? '#f59e0b' : '#3b82f6';
@@ -130,11 +135,23 @@ export default function DashboardScreen() {
 
         <View style={styles.metricsRow}>
           <MetricCard
-            label="Total Profit"
-            value={`${totalProfit >= 0 ? '' : '-'}${symbol}${Math.abs(totalProfit).toFixed(2)}`}
-            valueColor={totalProfit >= 0 ? '#22c55e' : '#ef4444'}
+            label="This Month"
+            value={`${thisMonthProfit >= 0 ? '' : '-'}${symbol}${Math.abs(thisMonthProfit).toFixed(2)}`}
+            valueColor={thisMonthProfit >= 0 ? '#22c55e' : '#ef4444'}
           />
           <MetricCard label="Total Flips" value={totalFlips.toString()} />
+        </View>
+        <View style={styles.metricsRow}>
+          <MetricCard
+            label="This Year"
+            value={`${thisYearProfit >= 0 ? '' : '-'}${symbol}${Math.abs(thisYearProfit).toFixed(2)}`}
+            valueColor={thisYearProfit >= 0 ? '#22c55e' : '#ef4444'}
+          />
+          <MetricCard
+            label="All-Time Profit"
+            value={`${allTimeProfit >= 0 ? '' : '-'}${symbol}${Math.abs(allTimeProfit).toFixed(2)}`}
+            valueColor={allTimeProfit >= 0 ? '#22c55e' : '#ef4444'}
+          />
         </View>
         <View style={styles.metricsRow}>
           <MetricCard label="Active Listings" value={activeListings.toString()} valueColor="#3b82f6" />

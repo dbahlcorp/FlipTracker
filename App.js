@@ -102,6 +102,7 @@ function AppNavigator() {
           },
           tabBarActiveTintColor: '#22c55e',
           tabBarInactiveTintColor: theme.textFaint,
+          tabBarAllowFontScaling: false,
           tabBarStyle: {
             backgroundColor: theme.tabBar,
             borderTopWidth: 0,
@@ -111,10 +112,13 @@ function AppNavigator() {
             paddingTop: 8,
             height: 68,
           },
+          tabBarItemStyle: {
+            paddingHorizontal: 2,
+          },
           tabBarLabelStyle: {
             fontSize: 10,
             fontWeight: '700',
-            letterSpacing: 0.8,
+            letterSpacing: 0.3,
             textTransform: 'uppercase',
             marginTop: 2,
           },
