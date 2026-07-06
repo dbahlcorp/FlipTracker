@@ -18,6 +18,7 @@ export default function EditFlipScreen({ navigation, route }) {
     dateSold: existing.dateSold ?? '',
     notes: existing.notes ?? '',
     photo: existing.photo ?? '',
+    currency: existing.currency || 'USD',
   };
 
   return (

@@ -7,25 +7,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { BarChart } from 'react-native-chart-kit';
 import { loadFlips, calcProfit, loadGoal, saveGoal } from '../utils/storage';
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { PLATFORMS } from '../constants';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const BAR_HALF_HEIGHT = 70;
 
 export default function DashboardScreen() {
   const { theme } = useTheme();
-  const { symbol } = useCurrency();
+  const { symbol, convert } = useCurrency();
   const styles = makeStyles(theme);
 
   const [flips, setFlips] = useState([]);
@@ -59,6 +57,8 @@ export default function DashboardScreen() {
         }, 0) / soldFlips.length
       : 0;
 
+  const profitOf = (f) => convert(calcProfit(f), f.currency);
+
   const now = new Date();
   const monthlyData = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
@@ -69,35 +69,32 @@ export default function DashboardScreen() {
         const date = new Date(f.dateSold || f.dateBought || f.createdAt);
         return date.getMonth() === month && date.getFullYear() === year;
       })
-      .reduce((sum, f) => sum + Math.max(calcProfit(f), 0), 0);
+      .reduce((sum, f) => sum + profitOf(f), 0);
     return { label: MONTH_LABELS[month], value: monthProfit };
   });
+  const maxMonthlyAbs = Math.max(...monthlyData.map((m) => Math.abs(m.value)), 1);
 
   const thisMonthFlips = flips.filter((f) => {
     const date = new Date(f.dateSold || f.dateBought || f.createdAt);
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   });
-  const thisMonthProfit = thisMonthFlips.reduce((sum, f) => sum + calcProfit(f), 0);
-  const currentMonthProfit = thisMonthFlips.reduce((sum, f) => sum + Math.max(calcProfit(f), 0), 0);
+  const thisMonthProfit = thisMonthFlips.reduce((sum, f) => sum + profitOf(f), 0);
 
   const thisYearProfit = flips
     .filter((f) => new Date(f.dateSold || f.dateBought || f.createdAt).getFullYear() === now.getFullYear())
-    .reduce((sum, f) => sum + calcProfit(f), 0);
+    .reduce((sum, f) => sum + profitOf(f), 0);
 
-  const allTimeProfit = flips.reduce((sum, f) => sum + calcProfit(f), 0);
+  const allTimeProfit = flips.reduce((sum, f) => sum + profitOf(f), 0);
 
-  const goalProgress = goal > 0 ? Math.min(currentMonthProfit / goal, 1) : 0;
+  // Progress toward a goal can't go below 0%, but the amount shown alongside it is
+  // the real (possibly negative) monthly profit — a bad month should never be masked.
+  const goalProgress = goal > 0 ? Math.min(Math.max(thisMonthProfit, 0) / goal, 1) : 0;
   const goalBarColor = goalProgress >= 1 ? '#22c55e' : goalProgress >= 0.5 ? '#f59e0b' : '#3b82f6';
-
-  const chartData = {
-    labels: monthlyData.map((m) => m.label),
-    datasets: [{ data: monthlyData.map((m) => m.value) }],
-  };
 
   const platformData = PLATFORMS
     .map((p) => {
       const pFlips = flips.filter((f) => f.platform === p);
-      const pProfit = pFlips.reduce((sum, f) => sum + calcProfit(f), 0);
+      const pProfit = pFlips.reduce((sum, f) => sum + profitOf(f), 0);
       return { platform: p, count: pFlips.length, profit: pProfit };
     })
     .filter((p) => p.count > 0);
@@ -178,7 +175,7 @@ export default function DashboardScreen() {
               </View>
               <View style={styles.goalFooter}>
                 <Text style={styles.goalAmount}>
-                  {symbol}{currentMonthProfit.toFixed(2)}
+                  {thisMonthProfit < 0 ? '-' : ''}{symbol}{Math.abs(thisMonthProfit).toFixed(2)}
                   <Text style={styles.goalOf}> / {symbol}{goal.toFixed(2)}</Text>
                 </Text>
                 <Text style={[styles.goalPct, { color: goalBarColor }]}>
@@ -194,28 +191,28 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Monthly Profit</Text>
           <Text style={styles.sectionSub}>Last 6 months</Text>
-          <View style={styles.chartContainer}>
-            <BarChart
-              data={chartData}
-              width={SCREEN_WIDTH - 48}
-              height={200}
-              yAxisLabel={symbol}
-              yAxisSuffix=""
-              fromZero
-              chartConfig={{
-                backgroundColor: theme.chartBg,
-                backgroundGradientFrom: theme.chartBg,
-                backgroundGradientTo: theme.chartBg,
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(34, 197, 94, ${opacity})`,
-                labelColor: () => theme.chartLabel,
-                style: { borderRadius: 12 },
-                propsForBackgroundLines: { stroke: theme.chartLine },
-                barPercentage: 0.6,
-              }}
-              style={{ borderRadius: 12 }}
-              showValuesOnTopOfBars
-            />
+          <View style={styles.monthlyChart}>
+            {monthlyData.map((m) => {
+              const barHeight = (Math.abs(m.value) / maxMonthlyAbs) * BAR_HALF_HEIGHT;
+              const positive = m.value >= 0;
+              return (
+                <View key={m.label} style={styles.barColumn}>
+                  <Text style={[styles.barValue, { color: positive ? '#22c55e' : '#ef4444' }]} numberOfLines={1}>
+                    {positive ? '+' : '-'}{symbol}{Math.abs(m.value).toFixed(0)}
+                  </Text>
+                  <View style={styles.barTrack}>
+                    <View style={styles.barUpperHalf}>
+                      {positive && <View style={[styles.barFill, styles.barPositive, { height: barHeight }]} />}
+                    </View>
+                    <View style={styles.barZeroLine} />
+                    <View style={styles.barLowerHalf}>
+                      {!positive && <View style={[styles.barFill, styles.barNegative, { height: barHeight }]} />}
+                    </View>
+                  </View>
+                  <Text style={styles.barMonthLabel}>{m.label}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
 
@@ -332,7 +329,17 @@ const makeStyles = (t) =>
     },
     sectionTitle: { fontSize: 16, fontWeight: '700', color: t.text, marginBottom: 2 },
     sectionSub: { fontSize: 12, color: t.textFaint, marginBottom: 12 },
-    chartContainer: { alignItems: 'center', marginTop: 4 },
+    monthlyChart: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
+    barColumn: { flex: 1, alignItems: 'center' },
+    barValue: { fontSize: 9, fontWeight: '700', marginBottom: 2 },
+    barTrack: { height: BAR_HALF_HEIGHT * 2, width: '70%', justifyContent: 'flex-start' },
+    barUpperHalf: { height: BAR_HALF_HEIGHT, justifyContent: 'flex-end', alignItems: 'center' },
+    barLowerHalf: { height: BAR_HALF_HEIGHT, justifyContent: 'flex-start', alignItems: 'center' },
+    barZeroLine: { height: 1, backgroundColor: t.border },
+    barFill: { width: '100%', borderRadius: 4 },
+    barPositive: { backgroundColor: '#22c55e' },
+    barNegative: { backgroundColor: '#ef4444' },
+    barMonthLabel: { fontSize: 11, color: t.textFaint, marginTop: 6, fontWeight: '500' },
     platformRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',

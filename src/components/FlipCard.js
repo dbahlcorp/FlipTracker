@@ -10,7 +10,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { calcProfit } from '../utils/storage';
+import { calcProfit, isRealized } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { STATUSES } from '../constants';
@@ -26,14 +26,17 @@ const STATUS_COLORS = {
 
 export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   const { theme } = useTheme();
-  const { symbol } = useCurrency();
+  const { symbol, convert } = useCurrency();
   const styles = makeStyles(theme);
 
   const translateX = useRef(new Animated.Value(0)).current;
   const deleteOpacity = useRef(new Animated.Value(0)).current;
 
-  const profit = calcProfit(flip);
+  const sold = isRealized(flip);
+  const profit = convert(calcProfit(flip), flip.currency);
+  const invested = convert((parseFloat(flip.buyPrice) || 0) + (parseFloat(flip.fees) || 0), flip.currency);
   const profitColor = profit >= 0 ? '#22c55e' : '#ef4444';
+  const money = (amount) => convert(parseFloat(amount) || 0, flip.currency).toFixed(2);
 
   const s = STATUS_COLORS[flip.status] || STATUS_COLORS['Active'];
   const statusBg   = theme.isDark ? s.darkBg   : s.lightBg;
@@ -59,12 +62,30 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
     },
   });
 
+  const revertSwipe = () => {
+    Animated.spring(translateX, { toValue: 0, useNativeDriver: true }).start();
+    Animated.timing(deleteOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+  };
+
   const handleDelete = () => {
-    Animated.timing(translateX, {
-      toValue: -SCREEN_WIDTH,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => onDelete(flip.id));
+    Alert.alert(
+      'Delete Flip',
+      `Delete "${flip.itemName}"? This can't be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel', onPress: revertSwipe },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            Animated.timing(translateX, {
+              toValue: -SCREEN_WIDTH,
+              duration: 250,
+              useNativeDriver: true,
+            }).start(() => onDelete(flip.id));
+          },
+        },
+      ]
+    );
   };
 
   const handleLongPress = () => {
@@ -116,9 +137,15 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
               ) : null}
             </View>
             <View style={styles.right}>
-              <Text style={[styles.profit, { color: profitColor }]}>
-                {profit >= 0 ? '+' : '-'}{symbol}{Math.abs(profit).toFixed(2)}
-              </Text>
+              {sold ? (
+                <Text style={[styles.profit, { color: profitColor }]}>
+                  {profit >= 0 ? '+' : '-'}{symbol}{Math.abs(profit).toFixed(2)}
+                </Text>
+              ) : (
+                <Text style={[styles.profit, styles.investedText]}>
+                  Invested {symbol}{invested.toFixed(2)}
+                </Text>
+              )}
               <View style={[styles.badge, { backgroundColor: statusBg }]}>
                 <Text style={[styles.badgeText, { color: statusText }]}>
                   {flip.status}
@@ -130,19 +157,19 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
           <View style={styles.priceRow}>
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Bought</Text>
-              <Text style={styles.priceValue}>{symbol}{parseFloat(flip.buyPrice || 0).toFixed(2)}</Text>
+              <Text style={styles.priceValue}>{symbol}{money(flip.buyPrice)}</Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Sold</Text>
               <Text style={styles.priceValue}>
-                {flip.sellPrice ? `${symbol}${parseFloat(flip.sellPrice).toFixed(2)}` : '—'}
+                {flip.sellPrice ? `${symbol}${money(flip.sellPrice)}` : '—'}
               </Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
               <Text style={styles.priceLabel}>Fees</Text>
-              <Text style={styles.priceValue}>{symbol}{parseFloat(flip.fees || 0).toFixed(2)}</Text>
+              <Text style={styles.priceValue}>{symbol}{money(flip.fees)}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -213,6 +240,7 @@ const makeStyles = (t) =>
       fontStyle: 'italic',
     },
     profit: { fontSize: 18, fontWeight: '700', marginBottom: 6 },
+    investedText: { fontSize: 13, fontWeight: '600', color: t.textMuted },
     badge: { borderRadius: 20, paddingHorizontal: 8, paddingVertical: 3 },
     badgeText: { fontSize: 11, fontWeight: '600' },
     priceRow: {

@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit } from '../utils/storage';
+import { loadFlips, calcProfit, isRealized } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 
@@ -40,8 +40,11 @@ function getCalendarGrid(year, month) {
 
 export default function CalendarScreen() {
   const { theme } = useTheme();
-  const { symbol } = useCurrency();
+  const { symbol, convert } = useCurrency();
   const styles = makeStyles(theme);
+
+  const profitOf = (f) => convert(calcProfit(f), f.currency);
+  const revenueOf = (f) => convert(parseFloat(f.sellPrice) || 0, f.currency);
 
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -73,19 +76,19 @@ export default function CalendarScreen() {
       if (!key) return;
       const mKey = key.slice(0, 7); // "YYYY-MM"
       if (!map[mKey]) map[mKey] = { profit: 0, revenue: 0, count: 0 };
-      map[mKey].profit += calcProfit(flip);
-      map[mKey].revenue += parseFloat(flip.sellPrice) || 0;
+      map[mKey].profit += profitOf(flip);
+      map[mKey].revenue += revenueOf(flip);
       map[mKey].count += 1;
     });
     return map;
-  }, [flips]);
+  }, [flips, symbol]);
 
   const getDayStats = (dateKey) => {
     const dayFlips = byDate[dateKey] || [];
     return {
       flips: dayFlips,
-      profit: dayFlips.reduce((s, f) => s + calcProfit(f), 0),
-      revenue: dayFlips.reduce((s, f) => s + (parseFloat(f.sellPrice) || 0), 0),
+      profit: dayFlips.reduce((s, f) => s + profitOf(f), 0),
+      revenue: dayFlips.reduce((s, f) => s + revenueOf(f), 0),
       count: dayFlips.length,
     };
   };
@@ -183,16 +186,21 @@ export default function CalendarScreen() {
             <Text style={styles.emptyText}>No activity on this day</Text>
           ) : (
             selectedStats.flips.map((flip) => {
-              const p = calcProfit(flip);
+              const sold = isRealized(flip);
+              const p = profitOf(flip);
               return (
                 <View key={flip.id} style={styles.miniFlipRow}>
                   <View style={{ flex: 1, marginRight: 8 }}>
                     <Text style={styles.miniFlipName} numberOfLines={1}>{flip.itemName}</Text>
                     <Text style={styles.miniFlipMeta}>{flip.status} · {flip.category}</Text>
                   </View>
-                  <Text style={[styles.miniFlipProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
-                    {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}
-                  </Text>
+                  {sold ? (
+                    <Text style={[styles.miniFlipProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
+                      {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}
+                    </Text>
+                  ) : (
+                    <Text style={[styles.miniFlipProfit, { color: theme.textMuted }]}>Unsold</Text>
+                  )}
                 </View>
               );
             })
@@ -264,22 +272,28 @@ export default function CalendarScreen() {
         ) : (
           <View style={{ paddingHorizontal: 16 }}>
             {stats.flips.map((flip) => {
-              const p = calcProfit(flip);
+              const sold = isRealized(flip);
+              const p = profitOf(flip);
+              const money = (amt) => convert(parseFloat(amt) || 0, flip.currency).toFixed(2);
               return (
                 <View key={flip.id} style={styles.flipCard}>
                   <View style={styles.flipCardTop}>
                     <Text style={styles.flipCardName} numberOfLines={1}>{flip.itemName}</Text>
-                    <Text style={[styles.flipCardProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
-                      {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}
-                    </Text>
+                    {sold ? (
+                      <Text style={[styles.flipCardProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
+                        {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}
+                      </Text>
+                    ) : (
+                      <Text style={[styles.flipCardProfit, { color: theme.textMuted, fontSize: 13 }]}>Unsold</Text>
+                    )}
                   </View>
                   <Text style={styles.flipCardMeta}>{flip.category} · {flip.condition} · {flip.platform}</Text>
                   <View style={styles.flipCardPrices}>
-                    <Text style={styles.priceChip}>Buy {symbol}{parseFloat(flip.buyPrice || 0).toFixed(2)}</Text>
+                    <Text style={styles.priceChip}>Buy {symbol}{money(flip.buyPrice)}</Text>
                     <Text style={styles.priceChip}>
-                      Sell {flip.sellPrice ? `${symbol}${parseFloat(flip.sellPrice).toFixed(2)}` : '—'}
+                      Sell {flip.sellPrice ? `${symbol}${money(flip.sellPrice)}` : '—'}
                     </Text>
-                    <Text style={styles.priceChip}>Fees {symbol}{parseFloat(flip.fees || 0).toFixed(2)}</Text>
+                    <Text style={styles.priceChip}>Fees {symbol}{money(flip.fees)}</Text>
                   </View>
                   {flip.notes ? <Text style={styles.flipCardNotes} numberOfLines={2}>{flip.notes}</Text> : null}
                 </View>
@@ -297,8 +311,8 @@ export default function CalendarScreen() {
       const key = getFlipDateKey(f);
       return key && key.startsWith(`${navYear}`);
     });
-    const yearProfit = yearFlips.reduce((s, f) => s + calcProfit(f), 0);
-    const yearRevenue = yearFlips.reduce((s, f) => s + (parseFloat(f.sellPrice) || 0), 0);
+    const yearProfit = yearFlips.reduce((s, f) => s + profitOf(f), 0);
+    const yearRevenue = yearFlips.reduce((s, f) => s + revenueOf(f), 0);
 
     const maxMonthProfit = Math.max(
       ...Array.from({ length: 12 }, (_, i) => {

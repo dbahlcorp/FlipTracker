@@ -12,10 +12,30 @@ export const CURRENCIES = {
   JPY: '¥',
 };
 
+// Approximate exchange rates relative to 1 USD. Static and manually maintained —
+// this app has no backend, so rates aren't fetched live. Update here as needed.
+export const EXCHANGE_RATES = {
+  USD: 1,
+  CAD: 1.38,
+  EUR: 0.92,
+  GBP: 0.79,
+  AUD: 1.53,
+  JPY: 156,
+};
+
+export function convertAmount(amount, fromCurrency, toCurrency) {
+  const value = amount || 0;
+  if (!fromCurrency || !toCurrency || fromCurrency === toCurrency) return value;
+  const fromRate = EXCHANGE_RATES[fromCurrency] || 1;
+  const toRate = EXCHANGE_RATES[toCurrency] || 1;
+  return (value / fromRate) * toRate;
+}
+
 const CurrencyContext = createContext({
   currency: 'USD',
   symbol: '$',
   setCurrency: () => {},
+  convert: (amount) => amount,
 });
 
 export function CurrencyProvider({ children }) {
@@ -34,8 +54,13 @@ export function CurrencyProvider({ children }) {
 
   const symbol = CURRENCIES[currency];
 
+  // Converts an amount recorded in `fromCurrency` (a flip's native currency) into
+  // the currently selected display currency, so switching currency actually
+  // recomputes totals instead of just relabeling the symbol.
+  const convert = (amount, fromCurrency) => convertAmount(amount, fromCurrency || currency, currency);
+
   return (
-    <CurrencyContext.Provider value={{ currency, symbol, setCurrency }}>
+    <CurrencyContext.Provider value={{ currency, symbol, setCurrency, convert }}>
       {children}
     </CurrencyContext.Provider>
   );

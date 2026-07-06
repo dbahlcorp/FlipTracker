@@ -13,8 +13,9 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
-import { useCurrency } from '../context/CurrencyContext';
+import { CURRENCIES } from '../context/CurrencyContext';
 import { CATEGORIES, CONDITIONS, PLATFORMS, STATUSES } from '../constants';
+import { savePickedPhoto } from '../utils/imageStorage';
 
 function PickerField({ label, options, value, onChange, styles }) {
   return (
@@ -62,11 +63,13 @@ function InputField({ label, placeholder, value, onChange, keyboardType = 'defau
  */
 export default function FlipForm({ initialForm, submitLabel, errorMessage, onSubmit }) {
   const { theme } = useTheme();
-  const { symbol } = useCurrency();
   const styles = makeStyles(theme);
 
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
+
+  const formCurrency = form.currency || 'USD';
+  const symbol = CURRENCIES[formCurrency] || '$';
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -80,11 +83,10 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
-      quality: 0.4,
-      base64: true,
+      quality: 0.5,
     });
-    if (!result.canceled && result.assets[0].base64) {
-      set('photo')(`data:image/jpeg;base64,${result.assets[0].base64}`);
+    if (!result.canceled && result.assets[0]?.uri) {
+      set('photo')(savePickedPhoto(result.assets[0].uri));
     }
   };
 
@@ -134,6 +136,8 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
           onChange={set('category')}
           styles={styles}
         />
+
+        <Text style={styles.currencyNote}>Prices recorded in {formCurrency}</Text>
 
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: 8 }}>
@@ -291,6 +295,7 @@ const makeStyles = (t) =>
     container: { flex: 1, backgroundColor: t.bg },
     content: { padding: 20, paddingBottom: 40 },
     fieldGroup: { marginBottom: 20 },
+    currencyNote: { fontSize: 12, color: t.textFaint, marginBottom: 10, marginTop: -8 },
     label: {
       fontSize: 13,
       fontWeight: '600',

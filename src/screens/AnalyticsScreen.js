@@ -4,21 +4,46 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Dimensions,
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { BarChart } from 'react-native-chart-kit';
-import { loadFlips, calcProfit } from '../utils/storage';
+import { loadFlips, calcProfit, calcDaysToSell, isRealized } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { CATEGORIES, PLATFORMS, PLATFORM_SHORT } from '../constants';
+import { CATEGORIES, PLATFORMS } from '../constants';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
+function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
+  return (
+    <View style={styles.catRow}>
+      <View style={styles.catLeft}>
+        <View style={styles.catLabelRow}>
+          <Text style={styles.catName}>{label}</Text>
+          <Text style={styles.catCount}>
+            {count} flip{count !== 1 ? 's' : ''}
+          </Text>
+        </View>
+        <View style={styles.barBg}>
+          <View
+            style={[
+              styles.barFill,
+              {
+                width: `${(Math.abs(amount) / maxAbs) * 100}%`,
+                backgroundColor: amount >= 0 ? '#22c55e' : '#ef4444',
+              },
+            ]}
+          />
+        </View>
+      </View>
+      <Text style={[styles.catProfit, { color: amount >= 0 ? '#22c55e' : '#ef4444' }]}>
+        {amount >= 0 ? '+' : '-'}{symbol}{Math.abs(amount).toFixed(2)}
+      </Text>
+    </View>
+  );
+}
 
 export default function AnalyticsScreen() {
   const { theme } = useTheme();
-  const { symbol } = useCurrency();
+  const { symbol, convert } = useCurrency();
   const styles = makeStyles(theme);
 
   const [flips, setFlips] = useState([]);
@@ -32,39 +57,51 @@ export default function AnalyticsScreen() {
     setRefreshing(false);
   };
 
-  const soldFlips = flips.filter((f) => f.status === 'Sold');
+  const profitOf = (f) => convert(calcProfit(f), f.currency);
+  const soldFlips = flips.filter(isRealized);
+
   const bestFlip = soldFlips.reduce(
     (best, f) => {
-      const p = calcProfit(f);
+      const p = profitOf(f);
       return p > best.profit ? { ...f, profit: p } : best;
     },
     { profit: -Infinity, itemName: null }
   );
 
-  const totalInvested = flips.reduce((sum, f) => sum + (parseFloat(f.buyPrice) || 0), 0);
-  const totalRevenue = flips.reduce((sum, f) => sum + (parseFloat(f.sellPrice) || 0), 0);
-  const totalProfit = flips.reduce((sum, f) => sum + calcProfit(f), 0);
+  const totalInvested = flips.reduce((sum, f) => sum + convert(parseFloat(f.buyPrice) || 0, f.currency), 0);
+  const totalRevenue = flips.reduce((sum, f) => sum + convert(parseFloat(f.sellPrice) || 0, f.currency), 0);
+  const totalProfit = flips.reduce((sum, f) => sum + profitOf(f), 0);
   const roi = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : '0.0';
 
-  const platformProfits = PLATFORMS.map((p) => {
-    const pFlips = flips.filter((f) => f.platform === p);
-    return Math.max(pFlips.reduce((sum, f) => sum + calcProfit(f), 0), 0);
-  });
+  // Days-to-sell / sell-through
+  const daysToSellValues = soldFlips.map(calcDaysToSell).filter((d) => d !== null);
+  const avgDaysToSell = daysToSellValues.length > 0
+    ? daysToSellValues.reduce((s, d) => s + d, 0) / daysToSellValues.length
+    : null;
+  const sellThroughRate = flips.length > 0 ? (soldFlips.length / flips.length) * 100 : 0;
 
-  const platformChartData = {
-    labels: PLATFORMS.map((p) => PLATFORM_SHORT[p]),
-    datasets: [{ data: platformProfits.length > 0 ? platformProfits : [0, 0, 0, 0] }],
-  };
+  const platformData = PLATFORMS.map((p) => {
+    const pFlips = flips.filter((f) => f.platform === p);
+    return {
+      label: p,
+      count: pFlips.length,
+      amount: pFlips.reduce((sum, f) => sum + profitOf(f), 0),
+    };
+  }).filter((p) => p.count > 0);
 
   const categoryData = CATEGORIES.map((cat) => {
     const cFlips = flips.filter((f) => f.category === cat);
-    const cProfit = cFlips.reduce((sum, f) => sum + calcProfit(f), 0);
-    return { cat, count: cFlips.length, profit: cProfit };
+    return {
+      label: cat,
+      count: cFlips.length,
+      amount: cFlips.reduce((sum, f) => sum + profitOf(f), 0),
+    };
   })
     .filter((c) => c.count > 0)
-    .sort((a, b) => b.profit - a.profit);
+    .sort((a, b) => b.amount - a.amount);
 
-  const maxCatProfit = Math.max(...categoryData.map((c) => Math.abs(c.profit)), 1);
+  const maxPlatformAbs = Math.max(...platformData.map((p) => Math.abs(p.amount)), 1);
+  const maxCatAbs = Math.max(...categoryData.map((c) => Math.abs(c.amount)), 1);
 
   return (
     <ScrollView
@@ -122,31 +159,31 @@ export default function AnalyticsScreen() {
         </View>
       </View>
 
-      {/* Platform Chart */}
+      {/* Performance */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Performance</Text>
+        <View style={styles.finRow}>
+          <View style={styles.finCard}>
+            <Text style={styles.finLabel}>Avg. Days to Sell</Text>
+            <Text style={styles.finValue}>{avgDaysToSell !== null ? avgDaysToSell.toFixed(1) : '—'}</Text>
+          </View>
+          <View style={styles.finCard}>
+            <Text style={styles.finLabel}>Sell-Through Rate</Text>
+            <Text style={styles.finValue}>{sellThroughRate.toFixed(0)}%</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Platform Breakdown */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profit by Platform</Text>
-        <Text style={styles.sectionSub}>Positive profit only</Text>
-        <View style={styles.chartContainer}>
-          <BarChart
-            data={platformChartData}
-            width={SCREEN_WIDTH - 64}
-            height={180}
-            yAxisLabel={symbol}
-            fromZero
-            chartConfig={{
-              backgroundColor: theme.chartBg,
-              backgroundGradientFrom: theme.chartBg,
-              backgroundGradientTo: theme.chartBg,
-              decimalPlaces: 0,
-              color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-              labelColor: () => theme.chartLabel,
-              propsForBackgroundLines: { stroke: theme.chartLine },
-              barPercentage: 0.5,
-            }}
-            style={{ borderRadius: 12 }}
-            showValuesOnTopOfBars
-          />
-        </View>
+        {platformData.length === 0 ? (
+          <Text style={styles.emptyText}>No data yet</Text>
+        ) : (
+          platformData.map((p) => (
+            <BarRow key={p.label} label={p.label} count={p.count} amount={p.amount} maxAbs={maxPlatformAbs} symbol={symbol} styles={styles} />
+          ))
+        )}
       </View>
 
       {/* Category Breakdown */}
@@ -156,30 +193,7 @@ export default function AnalyticsScreen() {
           <Text style={styles.emptyText}>No data yet</Text>
         ) : (
           categoryData.map((c) => (
-            <View key={c.cat} style={styles.catRow}>
-              <View style={styles.catLeft}>
-                <View style={styles.catLabelRow}>
-                  <Text style={styles.catName}>{c.cat}</Text>
-                  <Text style={styles.catCount}>
-                    {c.count} flip{c.count !== 1 ? 's' : ''}
-                  </Text>
-                </View>
-                <View style={styles.barBg}>
-                  <View
-                    style={[
-                      styles.barFill,
-                      {
-                        width: `${(Math.abs(c.profit) / maxCatProfit) * 100}%`,
-                        backgroundColor: c.profit >= 0 ? '#22c55e' : '#ef4444',
-                      },
-                    ]}
-                  />
-                </View>
-              </View>
-              <Text style={[styles.catProfit, { color: c.profit >= 0 ? '#22c55e' : '#ef4444' }]}>
-                {c.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(c.profit).toFixed(2)}
-              </Text>
-            </View>
+            <BarRow key={c.label} label={c.label} count={c.count} amount={c.amount} maxAbs={maxCatAbs} symbol={symbol} styles={styles} />
           ))
         )}
       </View>
@@ -247,7 +261,6 @@ const makeStyles = (t) =>
       marginBottom: 4,
     },
     finValue: { fontSize: 18, fontWeight: '700', color: t.text },
-    chartContainer: { alignItems: 'center', marginTop: 8 },
     catRow: {
       flexDirection: 'row',
       alignItems: 'center',

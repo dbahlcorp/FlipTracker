@@ -1,8 +1,11 @@
 import React from 'react';
 import FlipForm from '../components/FlipForm';
 import { addFlip } from '../utils/storage';
+import { useCurrency } from '../context/CurrencyContext';
 
 export default function AddFlipScreen({ navigation }) {
+  const { currency } = useCurrency();
+
   const initialForm = {
     itemName: '',
     category: 'Phones',
@@ -16,6 +19,7 @@ export default function AddFlipScreen({ navigation }) {
     dateSold: '',
     notes: '',
     photo: '',
+    currency,
   };
 
   return (
