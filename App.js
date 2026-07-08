@@ -76,12 +76,11 @@ function AppNavigator() {
             height: 68,
           },
           tabBarItemStyle: {
-            paddingHorizontal: 2,
+            paddingHorizontal: 0,
           },
           tabBarLabelStyle: {
-            fontSize: 10,
+            fontSize: 9,
             fontWeight: '700',
-            letterSpacing: 0.3,
             textTransform: 'uppercase',
             marginTop: 2,
           },
