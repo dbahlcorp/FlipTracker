@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.bahlcorp.fliptracker",
-      "buildNumber": "22",
+      "buildNumber": "23",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
         "NSPhotoLibraryUsageDescription": "Add photos to your flips.",
