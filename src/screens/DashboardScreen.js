@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, loadGoal, saveGoal } from '../utils/storage';
+import { loadFlips, calcProfit, loadGoal, saveGoal, getQuantity } from '../utils/storage';
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -52,7 +52,7 @@ export default function DashboardScreen() {
   const avgMargin =
     soldFlips.length > 0
       ? soldFlips.reduce((sum, f) => {
-          const buy = parseFloat(f.buyPrice) || 0;
+          const buy = (parseFloat(f.buyPrice) || 0) * getQuantity(f);
           return sum + (buy > 0 ? (calcProfit(f) / buy) * 100 : 0);
         }, 0) / soldFlips.length
       : 0;

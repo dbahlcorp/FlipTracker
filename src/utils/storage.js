@@ -9,7 +9,7 @@ const MIGRATION_DONE_KEY = '@flip_tracker_sqlite_migrated_v1';
 
 const FLIP_COLUMNS = [
   'itemName', 'category', 'buyPrice', 'sellPrice', 'fees', 'condition',
-  'platform', 'status', 'dateBought', 'dateSold', 'notes', 'photo', 'currency',
+  'platform', 'status', 'dateBought', 'dateSold', 'notes', 'photo', 'currency', 'quantity',
 ];
 
 let dbPromise = null;
@@ -38,9 +38,14 @@ async function openAndInit() {
       notes TEXT,
       photo TEXT,
       currency TEXT,
+      quantity TEXT,
       createdAt TEXT
     );
   `);
+  // Databases created before the quantity column existed need it added in place.
+  try {
+    await db.execAsync(`ALTER TABLE flips ADD COLUMN quantity TEXT;`);
+  } catch (e) {}
   await migrateFromAsyncStorage(db);
   return db;
 }
@@ -63,13 +68,13 @@ async function migrateFromAsyncStorage(db) {
       }
       await db.runAsync(
         `INSERT OR REPLACE INTO flips
-          (id, itemName, category, buyPrice, sellPrice, fees, condition, platform, status, dateBought, dateSold, notes, photo, currency, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id, itemName, category, buyPrice, sellPrice, fees, condition, platform, status, dateBought, dateSold, notes, photo, currency, quantity, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           flip.id, flip.itemName || '', flip.category || '', flip.buyPrice || '', flip.sellPrice || '',
           flip.fees || '', flip.condition || '', flip.platform || '', flip.status || '',
           flip.dateBought || '', flip.dateSold || '', flip.notes || '', photo,
-          flip.currency || legacyCurrency, flip.createdAt || new Date().toISOString(),
+          flip.currency || legacyCurrency, flip.quantity || '1', flip.createdAt || new Date().toISOString(),
         ]
       );
     }
@@ -96,11 +101,11 @@ export const addFlip = async (flip) => {
     createdAt: new Date().toISOString(),
   };
   await db.runAsync(
-    `INSERT INTO flips (id, itemName, category, buyPrice, sellPrice, fees, condition, platform, status, dateBought, dateSold, notes, photo, currency, createdAt)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO flips (id, itemName, category, buyPrice, sellPrice, fees, condition, platform, status, dateBought, dateSold, notes, photo, currency, quantity, createdAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       newFlip.id,
-      ...FLIP_COLUMNS.map((c) => newFlip[c] || ''),
+      ...FLIP_COLUMNS.map((c) => newFlip[c] || (c === 'quantity' ? '1' : '')),
       newFlip.createdAt,
     ]
   );
@@ -163,11 +168,13 @@ export const saveGoal = async (goal) => {
   } catch (e) {}
 };
 
+export const getQuantity = (flip) => parseFloat(flip.quantity) || 1;
+
 export const calcProfit = (flip) => {
   const sell = parseFloat(flip.sellPrice) || 0;
   const buy = parseFloat(flip.buyPrice) || 0;
   const fees = parseFloat(flip.fees) || 0;
-  return sell - buy - fees;
+  return (sell - buy - fees) * getQuantity(flip);
 };
 
 export const isRealized = (flip) => flip.status === 'Sold';

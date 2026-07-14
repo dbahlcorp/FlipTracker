@@ -11,6 +11,7 @@ export default function EditFlipScreen({ navigation, route }) {
     buyPrice: existing.buyPrice ?? '',
     sellPrice: existing.sellPrice ?? '',
     fees: existing.fees ?? '0',
+    quantity: existing.quantity ?? '1',
     condition: existing.condition ?? 'Good',
     platform: existing.platform ?? 'Facebook Marketplace',
     status: existing.status ?? 'Active',

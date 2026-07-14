@@ -10,7 +10,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { calcProfit, isRealized } from '../utils/storage';
+import { calcProfit, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { STATUSES } from '../constants';
@@ -33,8 +33,9 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   const deleteOpacity = useRef(new Animated.Value(0)).current;
 
   const sold = isRealized(flip);
+  const qty = getQuantity(flip);
   const profit = convert(calcProfit(flip), flip.currency);
-  const invested = convert((parseFloat(flip.buyPrice) || 0) + (parseFloat(flip.fees) || 0), flip.currency);
+  const invested = convert(((parseFloat(flip.buyPrice) || 0) + (parseFloat(flip.fees) || 0)) * qty, flip.currency);
   const profitColor = profit >= 0 ? '#22c55e' : '#ef4444';
   const money = (amount) => convert(parseFloat(amount) || 0, flip.currency).toFixed(2);
 
@@ -123,7 +124,7 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
             ) : null}
             <View style={styles.left}>
               <Text style={styles.itemName} numberOfLines={1}>
-                {flip.itemName}
+                {flip.itemName}{qty > 1 ? ` ×${qty}` : ''}
               </Text>
               <View style={styles.metaRow}>
                 <Text style={styles.meta}>{flip.category}</Text>
@@ -156,19 +157,19 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
 
           <View style={styles.priceRow}>
             <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Bought</Text>
+              <Text style={styles.priceLabel}>Bought{qty > 1 ? ' (ea)' : ''}</Text>
               <Text style={styles.priceValue}>{symbol}{money(flip.buyPrice)}</Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Sold</Text>
+              <Text style={styles.priceLabel}>Sold{qty > 1 ? ' (ea)' : ''}</Text>
               <Text style={styles.priceValue}>
                 {flip.sellPrice ? `${symbol}${money(flip.sellPrice)}` : '—'}
               </Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Fees</Text>
+              <Text style={styles.priceLabel}>Fees{qty > 1 ? ' (ea)' : ''}</Text>
               <Text style={styles.priceValue}>{symbol}{money(flip.fees)}</Text>
             </View>
           </View>

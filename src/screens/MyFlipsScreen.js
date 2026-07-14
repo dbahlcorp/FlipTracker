@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, deleteFlip, updateFlip, calcProfit } from '../utils/storage';
+import { loadFlips, deleteFlip, updateFlip, calcProfit, getQuantity } from '../utils/storage';
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -56,7 +56,7 @@ export default function MyFlipsScreen({ navigation }) {
       case 'Oldest':   return new Date(a.createdAt) - new Date(b.createdAt);
       case 'Profit ↑': return convert(calcProfit(a), a.currency) - convert(calcProfit(b), b.currency);
       case 'Profit ↓': return convert(calcProfit(b), b.currency) - convert(calcProfit(a), a.currency);
-      case 'Price ↑':  return convert(parseFloat(a.buyPrice) || 0, a.currency) - convert(parseFloat(b.buyPrice) || 0, b.currency);
+      case 'Price ↑':  return convert((parseFloat(a.buyPrice) || 0) * getQuantity(a), a.currency) - convert((parseFloat(b.buyPrice) || 0) * getQuantity(b), b.currency);
       case 'A-Z':      return (a.itemName || '').localeCompare(b.itemName || '');
       default:         return new Date(b.createdAt) - new Date(a.createdAt);
     }

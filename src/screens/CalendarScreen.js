@@ -7,7 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, isRealized } from '../utils/storage';
+import { loadFlips, calcProfit, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 
@@ -44,7 +44,7 @@ export default function CalendarScreen() {
   const styles = makeStyles(theme);
 
   const profitOf = (f) => convert(calcProfit(f), f.currency);
-  const revenueOf = (f) => convert(parseFloat(f.sellPrice) || 0, f.currency);
+  const revenueOf = (f) => convert((parseFloat(f.sellPrice) || 0) * getQuantity(f), f.currency);
 
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -191,7 +191,9 @@ export default function CalendarScreen() {
               return (
                 <View key={flip.id} style={styles.miniFlipRow}>
                   <View style={{ flex: 1, marginRight: 8 }}>
-                    <Text style={styles.miniFlipName} numberOfLines={1}>{flip.itemName}</Text>
+                    <Text style={styles.miniFlipName} numberOfLines={1}>
+                      {flip.itemName}{getQuantity(flip) > 1 ? ` ×${getQuantity(flip)}` : ''}
+                    </Text>
                     <Text style={styles.miniFlipMeta}>{flip.status} · {flip.category}</Text>
                   </View>
                   {sold ? (
@@ -278,7 +280,9 @@ export default function CalendarScreen() {
               return (
                 <View key={flip.id} style={styles.flipCard}>
                   <View style={styles.flipCardTop}>
-                    <Text style={styles.flipCardName} numberOfLines={1}>{flip.itemName}</Text>
+                    <Text style={styles.flipCardName} numberOfLines={1}>
+                      {flip.itemName}{getQuantity(flip) > 1 ? ` ×${getQuantity(flip)}` : ''}
+                    </Text>
                     {sold ? (
                       <Text style={[styles.flipCardProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
                         {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}

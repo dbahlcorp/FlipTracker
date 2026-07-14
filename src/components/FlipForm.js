@@ -105,10 +105,12 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
     }
   };
 
+  const quantity = parseFloat(form.quantity) || 1;
   const previewProfit =
-    (parseFloat(form.sellPrice) || 0) -
-    (parseFloat(form.buyPrice) || 0) -
-    (parseFloat(form.fees) || 0);
+    ((parseFloat(form.sellPrice) || 0) -
+      (parseFloat(form.buyPrice) || 0) -
+      (parseFloat(form.fees) || 0)) *
+    quantity;
 
   return (
     <KeyboardAvoidingView
@@ -166,16 +168,36 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
           </View>
         </View>
 
-        <InputField
-          label="Fees"
-          placeholder="0.00"
-          value={form.fees}
-          onChange={set('fees')}
-          keyboardType="decimal-pad"
-          prefix={symbol}
-          theme={theme}
-          styles={styles}
-        />
+        <View style={styles.row}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <InputField
+              label="Fees"
+              placeholder="0.00"
+              value={form.fees}
+              onChange={set('fees')}
+              keyboardType="decimal-pad"
+              prefix={symbol}
+              theme={theme}
+              styles={styles}
+            />
+          </View>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <InputField
+              label="Quantity"
+              placeholder="1"
+              value={form.quantity}
+              onChange={set('quantity')}
+              keyboardType="number-pad"
+              theme={theme}
+              styles={styles}
+            />
+          </View>
+        </View>
+        {quantity > 1 ? (
+          <Text style={styles.currencyNote}>
+            Recorded as {quantity} units sold — totals below are for all {quantity}
+          </Text>
+        ) : null}
 
         {(form.buyPrice || form.sellPrice) ? (
           <View style={[

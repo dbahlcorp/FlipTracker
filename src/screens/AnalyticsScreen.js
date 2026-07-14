@@ -7,7 +7,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, calcDaysToSell, isRealized } from '../utils/storage';
+import { loadFlips, calcProfit, calcDaysToSell, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { CATEGORIES, PLATFORMS } from '../constants';
@@ -68,8 +68,8 @@ export default function AnalyticsScreen() {
     { profit: -Infinity, itemName: null }
   );
 
-  const totalInvested = flips.reduce((sum, f) => sum + convert(parseFloat(f.buyPrice) || 0, f.currency), 0);
-  const totalRevenue = flips.reduce((sum, f) => sum + convert(parseFloat(f.sellPrice) || 0, f.currency), 0);
+  const totalInvested = flips.reduce((sum, f) => sum + convert((parseFloat(f.buyPrice) || 0) * getQuantity(f), f.currency), 0);
+  const totalRevenue = flips.reduce((sum, f) => sum + convert((parseFloat(f.sellPrice) || 0) * getQuantity(f), f.currency), 0);
   const totalProfit = flips.reduce((sum, f) => sum + profitOf(f), 0);
   const roi = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : '0.0';
 

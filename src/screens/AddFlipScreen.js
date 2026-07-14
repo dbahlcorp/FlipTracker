@@ -12,6 +12,7 @@ export default function AddFlipScreen({ navigation }) {
     buyPrice: '',
     sellPrice: '',
     fees: '0',
+    quantity: '1',
     condition: 'Good',
     platform: 'Facebook Marketplace',
     status: 'Active',
