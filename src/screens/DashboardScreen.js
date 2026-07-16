@@ -16,7 +16,7 @@ import { loadFlips, calcProfit, loadGoal, saveGoal, getQuantity } from '../utils
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { PLATFORMS } from '../constants';
+import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const BAR_HALF_HEIGHT = 70;
@@ -283,7 +283,12 @@ export default function DashboardScreen() {
 const makeStyles = (t) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: t.bg },
-    content: { paddingBottom: 24 },
+    content: {
+      width: '100%',
+      maxWidth: TABLET_CONTENT_MAX_WIDTH,
+      alignSelf: 'center',
+      paddingBottom: 24,
+    },
     header: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12 },
     greeting: { fontSize: 24, fontWeight: '800', color: t.text },
     date: { fontSize: 13, color: t.textMuted, marginTop: 2 },

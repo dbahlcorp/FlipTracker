@@ -18,6 +18,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useCurrency, CURRENCIES } from '../context/CurrencyContext';
 import { loadGoal, saveGoal, exportAllData, clearAllFlips } from '../utils/storage';
 import appJson from '../../app.json';
+import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 export default function SettingsScreen() {
   const { theme, toggleTheme } = useTheme();
@@ -180,7 +181,13 @@ export default function SettingsScreen() {
 const makeStyles = (t) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: t.bg },
-    content: { padding: 16, paddingBottom: 40 },
+    content: {
+      width: '100%',
+      maxWidth: TABLET_CONTENT_MAX_WIDTH,
+      alignSelf: 'center',
+      padding: 16,
+      paddingBottom: 40,
+    },
     section: {
       backgroundColor: t.card,
       borderRadius: 16,

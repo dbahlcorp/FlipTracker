@@ -13,7 +13,11 @@ import { loadFlips, deleteFlip, updateFlip, calcProfit, getQuantity } from '../u
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { PLATFORMS as PLATFORM_OPTIONS, STATUSES as STATUS_OPTIONS } from '../constants';
+import {
+  PLATFORMS as PLATFORM_OPTIONS,
+  STATUSES as STATUS_OPTIONS,
+  TABLET_CONTENT_MAX_WIDTH,
+} from '../constants';
 
 const PLATFORMS = ['All', ...PLATFORM_OPTIONS];
 const STATUSES = ['All', ...STATUS_OPTIONS];
@@ -184,7 +188,13 @@ export default function MyFlipsScreen({ navigation }) {
 
 const makeStyles = (t) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: t.bg },
+    container: {
+      flex: 1,
+      width: '100%',
+      maxWidth: TABLET_CONTENT_MAX_WIDTH,
+      alignSelf: 'center',
+      backgroundColor: t.bg,
+    },
     searchContainer: { padding: 16, paddingBottom: 8 },
     searchBar: {
       flexDirection: 'row',

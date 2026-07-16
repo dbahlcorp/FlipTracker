@@ -10,7 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { loadFlips, calcProfit, calcDaysToSell, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
-import { CATEGORIES, PLATFORMS } from '../constants';
+import { CATEGORIES, PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
   return (
@@ -204,7 +204,13 @@ export default function AnalyticsScreen() {
 const makeStyles = (t) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: t.bg },
-    content: { padding: 16, paddingBottom: 32 },
+    content: {
+      width: '100%',
+      maxWidth: TABLET_CONTENT_MAX_WIDTH,
+      alignSelf: 'center',
+      padding: 16,
+      paddingBottom: 32,
+    },
     pageTitle: { fontSize: 24, fontWeight: '800', color: t.text, marginBottom: 16 },
     bestFlipCard: {
       backgroundColor: t.bestFlipCard,

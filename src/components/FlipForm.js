@@ -14,7 +14,13 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
 import { CURRENCIES } from '../context/CurrencyContext';
-import { CATEGORIES, CONDITIONS, PLATFORMS, STATUSES } from '../constants';
+import {
+  CATEGORIES,
+  CONDITIONS,
+  PLATFORMS,
+  STATUSES,
+  TABLET_CONTENT_MAX_WIDTH,
+} from '../constants';
 import { savePickedPhoto } from '../utils/imageStorage';
 
 function PickerField({ label, options, value, onChange, styles }) {
@@ -315,7 +321,13 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
 const makeStyles = (t) =>
   StyleSheet.create({
     container: { flex: 1, backgroundColor: t.bg },
-    content: { padding: 20, paddingBottom: 40 },
+    content: {
+      width: '100%',
+      maxWidth: TABLET_CONTENT_MAX_WIDTH,
+      alignSelf: 'center',
+      padding: 20,
+      paddingBottom: 40,
+    },
     fieldGroup: { marginBottom: 20 },
     currencyNote: { fontSize: 12, color: t.textFaint, marginBottom: 10, marginTop: -8 },
     label: {

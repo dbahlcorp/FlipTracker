@@ -10,6 +10,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { loadFlips, calcProfit, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 const VIEWS = ['Daily', 'Monthly', 'Yearly'];
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -431,7 +432,13 @@ export default function CalendarScreen() {
 
 const makeStyles = (t) =>
   StyleSheet.create({
-    container: { flex: 1, backgroundColor: t.bg },
+    container: {
+      flex: 1,
+      width: '100%',
+      maxWidth: TABLET_CONTENT_MAX_WIDTH,
+      alignSelf: 'center',
+      backgroundColor: t.bg,
+    },
 
     switcher: {
       flexDirection: 'row',
