@@ -10,9 +10,10 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { calcProfit, isRealized, getQuantity } from '../utils/storage';
+import { calcProfit, calcTotalCost, calcMargin, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import { STATUSES } from '../constants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
@@ -27,6 +28,8 @@ const STATUS_COLORS = {
 export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   const { theme } = useTheme();
   const { symbol, convert } = useCurrency();
+  const { labourRate, laserRate } = useRates();
+  const rates = { labourRate, laserRate };
   const styles = makeStyles(theme);
 
   const translateX = useRef(new Animated.Value(0)).current;
@@ -34,8 +37,9 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
 
   const sold = isRealized(flip);
   const qty = getQuantity(flip);
-  const profit = convert(calcProfit(flip), flip.currency);
-  const invested = convert(((parseFloat(flip.buyPrice) || 0) + (parseFloat(flip.fees) || 0)) * qty, flip.currency);
+  const profit = convert(calcProfit(flip, rates), flip.currency);
+  const margin = calcMargin(flip, rates);
+  const totalCost = convert(calcTotalCost(flip, rates), flip.currency);
   const profitColor = profit >= 0 ? '#22c55e' : '#ef4444';
   const money = (amount) => convert(parseFloat(amount) || 0, flip.currency).toFixed(2);
 
@@ -144,7 +148,7 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
                 </Text>
               ) : (
                 <Text style={[styles.profit, styles.investedText]}>
-                  Invested {symbol}{invested.toFixed(2)}
+                  Total Cost {symbol}{totalCost.toFixed(2)}
                 </Text>
               )}
               <View style={[styles.badge, { backgroundColor: statusBg }]}>
@@ -157,20 +161,20 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
 
           <View style={styles.priceRow}>
             <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Bought{qty > 1 ? ' (ea)' : ''}</Text>
-              <Text style={styles.priceValue}>{symbol}{money(flip.buyPrice)}</Text>
+              <Text style={styles.priceLabel}>Material{qty > 1 ? ' (ea)' : ''}</Text>
+              <Text style={styles.priceValue}>{symbol}{money(flip.materialCost)}</Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Sold{qty > 1 ? ' (ea)' : ''}</Text>
+              <Text style={styles.priceLabel}>Selling{qty > 1 ? ' (ea)' : ''}</Text>
               <Text style={styles.priceValue}>
-                {flip.sellPrice ? `${symbol}${money(flip.sellPrice)}` : '—'}
+                {flip.sellingPrice ? `${symbol}${money(flip.sellingPrice)}` : '—'}
               </Text>
             </View>
             <View style={styles.priceDivider} />
             <View style={styles.priceItem}>
-              <Text style={styles.priceLabel}>Fees{qty > 1 ? ' (ea)' : ''}</Text>
-              <Text style={styles.priceValue}>{symbol}{money(flip.fees)}</Text>
+              <Text style={styles.priceLabel}>Margin</Text>
+              <Text style={styles.priceValue}>{margin.toFixed(0)}%</Text>
             </View>
           </View>
         </TouchableOpacity>

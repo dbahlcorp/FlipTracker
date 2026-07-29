@@ -7,9 +7,10 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, calcDaysToSell, isRealized, getQuantity } from '../utils/storage';
+import { loadFlips, calcProfit, calcTotalCost, calcDaysToSell, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import { CATEGORIES, PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
@@ -44,6 +45,8 @@ function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
 export default function AnalyticsScreen() {
   const { theme } = useTheme();
   const { symbol, convert } = useCurrency();
+  const { labourRate, laserRate } = useRates();
+  const rates = { labourRate, laserRate };
   const styles = makeStyles(theme);
 
   const [flips, setFlips] = useState([]);
@@ -57,7 +60,7 @@ export default function AnalyticsScreen() {
     setRefreshing(false);
   };
 
-  const profitOf = (f) => convert(calcProfit(f), f.currency);
+  const profitOf = (f) => convert(calcProfit(f, rates), f.currency);
   const soldFlips = flips.filter(isRealized);
 
   const bestFlip = soldFlips.reduce(
@@ -68,10 +71,10 @@ export default function AnalyticsScreen() {
     { profit: -Infinity, itemName: null }
   );
 
-  const totalInvested = flips.reduce((sum, f) => sum + convert((parseFloat(f.buyPrice) || 0) * getQuantity(f), f.currency), 0);
-  const totalRevenue = flips.reduce((sum, f) => sum + convert((parseFloat(f.sellPrice) || 0) * getQuantity(f), f.currency), 0);
+  const totalCost = flips.reduce((sum, f) => sum + convert(calcTotalCost(f, rates), f.currency), 0);
+  const totalRevenue = flips.reduce((sum, f) => sum + convert((parseFloat(f.sellingPrice) || 0) * getQuantity(f), f.currency), 0);
   const totalProfit = flips.reduce((sum, f) => sum + profitOf(f), 0);
-  const roi = totalInvested > 0 ? ((totalProfit / totalInvested) * 100).toFixed(1) : '0.0';
+  const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
   // Days-to-sell / sell-through
   const daysToSellValues = soldFlips.map(calcDaysToSell).filter((d) => d !== null);
@@ -135,8 +138,8 @@ export default function AnalyticsScreen() {
         <Text style={styles.sectionTitle}>Financial Overview</Text>
         <View style={styles.finRow}>
           <View style={styles.finCard}>
-            <Text style={styles.finLabel}>Total Invested</Text>
-            <Text style={styles.finValue}>{symbol}{totalInvested.toFixed(2)}</Text>
+            <Text style={styles.finLabel}>Total Cost</Text>
+            <Text style={styles.finValue}>{symbol}{totalCost.toFixed(2)}</Text>
           </View>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Total Revenue</Text>
@@ -151,9 +154,9 @@ export default function AnalyticsScreen() {
             </Text>
           </View>
           <View style={styles.finCard}>
-            <Text style={styles.finLabel}>ROI</Text>
-            <Text style={[styles.finValue, { color: parseFloat(roi) >= 0 ? '#22c55e' : '#ef4444', fontSize: 24 }]}>
-              {parseFloat(roi) >= 0 ? '+' : ''}{roi}%
+            <Text style={styles.finLabel}>Profit Margin</Text>
+            <Text style={[styles.finValue, { color: parseFloat(profitMargin) >= 0 ? '#22c55e' : '#ef4444', fontSize: 24 }]}>
+              {parseFloat(profitMargin) >= 0 ? '+' : ''}{profitMargin}%
             </Text>
           </View>
         </View>

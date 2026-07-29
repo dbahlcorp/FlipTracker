@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency, CURRENCIES } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import { loadGoal, saveGoal, exportAllData, clearAllFlips } from '../utils/storage';
 import appJson from '../../app.json';
 import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
@@ -23,11 +24,19 @@ import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
 export default function SettingsScreen() {
   const { theme, toggleTheme } = useTheme();
   const { currency, setCurrency } = useCurrency();
+  const { labourRate, laserRate, setLabourRate, setLaserRate } = useRates();
   const styles = makeStyles(theme);
 
   const [goal, setGoal] = useState(0);
   const [goalInput, setGoalInput] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [labourRateInput, setLabourRateInput] = useState('');
+  const [laserRateInput, setLaserRateInput] = useState('');
+
+  useEffect(() => {
+    setLabourRateInput(labourRate > 0 ? labourRate.toString() : '');
+    setLaserRateInput(laserRate > 0 ? laserRate.toString() : '');
+  }, [labourRate, laserRate]);
 
   useFocusEffect(useCallback(() => {
     loadGoal().then((g) => {
@@ -41,6 +50,12 @@ export default function SettingsScreen() {
     await saveGoal(g);
     setGoal(g);
     Alert.alert('Saved', 'Monthly goal updated.');
+  };
+
+  const handleSaveRates = async () => {
+    await setLabourRate(parseFloat(labourRateInput) || 0);
+    await setLaserRate(parseFloat(laserRateInput) || 0);
+    Alert.alert('Saved', 'Cost rates updated.');
   };
 
   const handleExport = async () => {
@@ -141,6 +156,40 @@ export default function SettingsScreen() {
         </View>
 
         <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cost Rates</Text>
+          <Text style={styles.sectionSub}>
+            Used to auto-calculate Labour Cost and Laser Cost from the time entered on a flip.
+          </Text>
+          <Text style={styles.inputLabel}>Hourly Labour Rate</Text>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.prefix}>{CURRENCIES[currency]}</Text>
+            <TextInput
+              style={styles.input}
+              value={labourRateInput}
+              onChangeText={setLabourRateInput}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor={theme.placeholder}
+            />
+          </View>
+          <Text style={styles.inputLabel}>Hourly Laser Rate</Text>
+          <View style={styles.inputWrapper}>
+            <Text style={styles.prefix}>{CURRENCIES[currency]}</Text>
+            <TextInput
+              style={styles.input}
+              value={laserRateInput}
+              onChangeText={setLaserRateInput}
+              keyboardType="decimal-pad"
+              placeholder="0.00"
+              placeholderTextColor={theme.placeholder}
+            />
+          </View>
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSaveRates}>
+            <Text style={styles.saveBtnText}>Save Rates</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Monthly Profit Goal</Text>
           <View style={styles.inputWrapper}>
             <Text style={styles.prefix}>{CURRENCIES[currency]}</Text>
@@ -200,6 +249,7 @@ const makeStyles = (t) =>
     sectionSub: { fontSize: 12, color: t.textFaint, marginBottom: 12, lineHeight: 17 },
     row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     rowLabel: { fontSize: 15, color: t.textSub, fontWeight: '600' },
+    inputLabel: { fontSize: 13, color: t.textMuted, fontWeight: '600', marginBottom: 6 },
     chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
     chip: {
       paddingHorizontal: 12,

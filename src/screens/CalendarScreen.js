@@ -7,9 +7,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, isRealized, getQuantity } from '../utils/storage';
+import { loadFlips, calcProfit, calcMargin, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 const VIEWS = ['Daily', 'Monthly', 'Yearly'];
@@ -42,10 +43,12 @@ function getCalendarGrid(year, month) {
 export default function CalendarScreen() {
   const { theme } = useTheme();
   const { symbol, convert } = useCurrency();
+  const { labourRate, laserRate } = useRates();
+  const rates = { labourRate, laserRate };
   const styles = makeStyles(theme);
 
-  const profitOf = (f) => convert(calcProfit(f), f.currency);
-  const revenueOf = (f) => convert((parseFloat(f.sellPrice) || 0) * getQuantity(f), f.currency);
+  const profitOf = (f) => convert(calcProfit(f, rates), f.currency);
+  const revenueOf = (f) => convert((parseFloat(f.sellingPrice) || 0) * getQuantity(f), f.currency);
 
   const todayDate = new Date();
   todayDate.setHours(0, 0, 0, 0);
@@ -294,11 +297,11 @@ export default function CalendarScreen() {
                   </View>
                   <Text style={styles.flipCardMeta}>{flip.category} · {flip.condition} · {flip.platform}</Text>
                   <View style={styles.flipCardPrices}>
-                    <Text style={styles.priceChip}>Buy {symbol}{money(flip.buyPrice)}</Text>
+                    <Text style={styles.priceChip}>Material {symbol}{money(flip.materialCost)}</Text>
                     <Text style={styles.priceChip}>
-                      Sell {flip.sellPrice ? `${symbol}${money(flip.sellPrice)}` : '—'}
+                      Selling {flip.sellingPrice ? `${symbol}${money(flip.sellingPrice)}` : '—'}
                     </Text>
-                    <Text style={styles.priceChip}>Fees {symbol}{money(flip.fees)}</Text>
+                    <Text style={styles.priceChip}>Margin {calcMargin(flip, rates).toFixed(0)}%</Text>
                   </View>
                   {flip.notes ? <Text style={styles.flipCardNotes} numberOfLines={2}>{flip.notes}</Text> : null}
                 </View>

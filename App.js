@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
+import { RatesProvider } from './src/context/RatesContext';
 import DashboardScreen from './src/screens/DashboardScreen';
 import MyFlipsScreen from './src/screens/MyFlipsScreen';
 import AnalyticsScreen from './src/screens/AnalyticsScreen';
@@ -104,7 +105,9 @@ export default function App() {
   return (
     <ThemeProvider>
       <CurrencyProvider>
-        <AppNavigator />
+        <RatesProvider>
+          <AppNavigator />
+        </RatesProvider>
       </CurrencyProvider>
     </ThemeProvider>
   );

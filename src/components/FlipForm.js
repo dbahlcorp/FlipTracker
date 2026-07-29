@@ -14,6 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useTheme } from '../context/ThemeContext';
 import { CURRENCIES } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import {
   CATEGORIES,
   CONDITIONS,
@@ -22,6 +23,14 @@ import {
   TABLET_CONTENT_MAX_WIDTH,
 } from '../constants';
 import { savePickedPhoto } from '../utils/imageStorage';
+import {
+  calcLabourCost,
+  calcLaserCost,
+  calcTotalCost,
+  calcProfit,
+  calcMargin,
+  calcBreakEvenQuantity,
+} from '../utils/storage';
 
 function PickerField({ label, options, value, onChange, styles }) {
   return (
@@ -70,6 +79,8 @@ function InputField({ label, placeholder, value, onChange, keyboardType = 'defau
 export default function FlipForm({ initialForm, submitLabel, errorMessage, onSubmit }) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
+  const { labourRate, laserRate } = useRates();
+  const rates = { labourRate, laserRate };
 
   const [form, setForm] = useState(initialForm);
   const [saving, setSaving] = useState(false);
@@ -112,11 +123,12 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
   };
 
   const quantity = parseFloat(form.quantity) || 1;
-  const previewProfit =
-    ((parseFloat(form.sellPrice) || 0) -
-      (parseFloat(form.buyPrice) || 0) -
-      (parseFloat(form.fees) || 0)) *
-    quantity;
+  const labourCost = calcLabourCost(form, rates);
+  const laserCost = calcLaserCost(form, rates);
+  const totalCost = calcTotalCost(form, rates);
+  const previewProfit = calcProfit(form, rates);
+  const previewMargin = calcMargin(form, rates);
+  const breakEvenQty = calcBreakEvenQuantity(form, rates);
 
   return (
     <KeyboardAvoidingView
@@ -150,10 +162,10 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: 8 }}>
             <InputField
-              label="Buy Price"
+              label="Material Cost"
               placeholder="0.00"
-              value={form.buyPrice}
-              onChange={set('buyPrice')}
+              value={form.materialCost}
+              onChange={set('materialCost')}
               keyboardType="decimal-pad"
               prefix={symbol}
               theme={theme}
@@ -162,10 +174,10 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
           </View>
           <View style={{ flex: 1, marginLeft: 8 }}>
             <InputField
-              label="Sell Price"
+              label="Consumables"
               placeholder="0.00"
-              value={form.sellPrice}
-              onChange={set('sellPrice')}
+              value={form.consumables}
+              onChange={set('consumables')}
               keyboardType="decimal-pad"
               prefix={symbol}
               theme={theme}
@@ -177,10 +189,62 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: 8 }}>
             <InputField
-              label="Fees"
+              label="Labour Time (min)"
+              placeholder="0"
+              value={form.labourTime}
+              onChange={set('labourTime')}
+              keyboardType="number-pad"
+              theme={theme}
+              styles={styles}
+            />
+          </View>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <InputField
+              label="Laser Time (min)"
+              placeholder="0"
+              value={form.laserTime}
+              onChange={set('laserTime')}
+              keyboardType="number-pad"
+              theme={theme}
+              styles={styles}
+            />
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <InputField
+              label="Packaging"
               placeholder="0.00"
-              value={form.fees}
-              onChange={set('fees')}
+              value={form.packaging}
+              onChange={set('packaging')}
+              keyboardType="decimal-pad"
+              prefix={symbol}
+              theme={theme}
+              styles={styles}
+            />
+          </View>
+          <View style={{ flex: 1, marginLeft: 8 }}>
+            <InputField
+              label="Shipping"
+              placeholder="0.00"
+              value={form.shipping}
+              onChange={set('shipping')}
+              keyboardType="decimal-pad"
+              prefix={symbol}
+              theme={theme}
+              styles={styles}
+            />
+          </View>
+        </View>
+
+        <View style={styles.row}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <InputField
+              label="Marketplace Fees"
+              placeholder="0.00"
+              value={form.marketplaceFees}
+              onChange={set('marketplaceFees')}
               keyboardType="decimal-pad"
               prefix={symbol}
               theme={theme}
@@ -199,24 +263,63 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
             />
           </View>
         </View>
+
+        <InputField
+          label="Selling Price"
+          placeholder="0.00"
+          value={form.sellingPrice}
+          onChange={set('sellingPrice')}
+          keyboardType="decimal-pad"
+          prefix={symbol}
+          theme={theme}
+          styles={styles}
+        />
+
         {quantity > 1 ? (
           <Text style={styles.currencyNote}>
-            Recorded as {quantity} units sold — totals below are for all {quantity}
+            Recorded as {quantity} units — totals below are for all {quantity}
           </Text>
         ) : null}
 
-        {(form.buyPrice || form.sellPrice) ? (
+        {(form.materialCost || form.sellingPrice) ? (
           <View style={[
-            styles.profitPreview,
+            styles.summaryCard,
             { borderColor: previewProfit >= 0 ? '#dcfce7' : '#fee2e2',
               backgroundColor: previewProfit >= 0
                 ? (theme.isDark ? '#14532d' : '#f0fdf4')
                 : (theme.isDark ? '#450a0a' : '#fff5f5') }
           ]}>
-            <Text style={styles.profitLabel}>Profit Preview</Text>
-            <Text style={[styles.profitValue, { color: previewProfit >= 0 ? '#22c55e' : '#ef4444' }]}>
-              {previewProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(previewProfit).toFixed(2)}
-            </Text>
+            {(labourCost > 0 || laserCost > 0) ? (
+              <View style={styles.summaryRow}>
+                <Text style={styles.summarySubLabel}>Labour Cost · Laser Cost</Text>
+                <Text style={styles.summarySubValue}>
+                  {symbol}{labourCost.toFixed(2)} · {symbol}{laserCost.toFixed(2)}
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.summaryRow}>
+              <Text style={styles.summarySubLabel}>Total Cost</Text>
+              <Text style={styles.summarySubValue}>{symbol}{totalCost.toFixed(2)}</Text>
+            </View>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryRow}>
+              <Text style={styles.profitLabel}>Profit</Text>
+              <Text style={[styles.profitValue, { color: previewProfit >= 0 ? '#22c55e' : '#ef4444' }]}>
+                {previewProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(previewProfit).toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summarySubLabel}>Profit Margin</Text>
+              <Text style={[styles.summarySubValue, { color: previewMargin >= 0 ? '#22c55e' : '#ef4444', fontWeight: '700' }]}>
+                {previewMargin.toFixed(1)}%
+              </Text>
+            </View>
+            <View style={styles.summaryRow}>
+              <Text style={styles.summarySubLabel}>Break-even Quantity</Text>
+              <Text style={styles.summarySubValue}>
+                {breakEvenQty !== null ? breakEvenQty : '—'}
+              </Text>
+            </View>
           </View>
         ) : null}
 
@@ -365,15 +468,21 @@ const makeStyles = (t) =>
     chipText: { fontSize: 13, color: t.textMuted, fontWeight: '500' },
     chipTextActive: { color: t.isDark ? '#4ade80' : '#16a34a', fontWeight: '700' },
     row: { flexDirection: 'row', marginBottom: 0 },
-    profitPreview: {
+    summaryCard: {
       borderRadius: 10,
       padding: 14,
       marginBottom: 20,
+      borderWidth: 1,
+    },
+    summaryRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      borderWidth: 1,
+      paddingVertical: 4,
     },
+    summarySubLabel: { fontSize: 13, color: t.textMuted, fontWeight: '500' },
+    summarySubValue: { fontSize: 14, color: t.textSub, fontWeight: '600' },
+    summaryDivider: { height: 1, backgroundColor: t.border, marginVertical: 6 },
     profitLabel: { fontSize: 14, color: t.textSub, fontWeight: '600' },
     profitValue: { fontSize: 22, fontWeight: '800' },
     photoBtn: {

@@ -13,6 +13,7 @@ import { loadFlips, deleteFlip, updateFlip, calcProfit, getQuantity } from '../u
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import {
   PLATFORMS as PLATFORM_OPTIONS,
   STATUSES as STATUS_OPTIONS,
@@ -21,11 +22,13 @@ import {
 
 const PLATFORMS = ['All', ...PLATFORM_OPTIONS];
 const STATUSES = ['All', ...STATUS_OPTIONS];
-const SORTS = ['Newest', 'Oldest', 'Profit ↑', 'Profit ↓', 'Price ↑', 'A-Z'];
+const SORTS = ['Newest', 'Oldest', 'Profit ↑', 'Profit ↓', 'Cost ↑', 'A-Z'];
 
 export default function MyFlipsScreen({ navigation }) {
   const { theme } = useTheme();
   const { convert } = useCurrency();
+  const { labourRate, laserRate } = useRates();
+  const rates = { labourRate, laserRate };
   const styles = makeStyles(theme);
 
   const [flips, setFlips] = useState([]);
@@ -58,9 +61,9 @@ export default function MyFlipsScreen({ navigation }) {
   const sorted = [...filtered].sort((a, b) => {
     switch (sortBy) {
       case 'Oldest':   return new Date(a.createdAt) - new Date(b.createdAt);
-      case 'Profit ↑': return convert(calcProfit(a), a.currency) - convert(calcProfit(b), b.currency);
-      case 'Profit ↓': return convert(calcProfit(b), b.currency) - convert(calcProfit(a), a.currency);
-      case 'Price ↑':  return convert((parseFloat(a.buyPrice) || 0) * getQuantity(a), a.currency) - convert((parseFloat(b.buyPrice) || 0) * getQuantity(b), b.currency);
+      case 'Profit ↑': return convert(calcProfit(a, rates), a.currency) - convert(calcProfit(b, rates), b.currency);
+      case 'Profit ↓': return convert(calcProfit(b, rates), b.currency) - convert(calcProfit(a, rates), a.currency);
+      case 'Cost ↑':   return convert((parseFloat(a.materialCost) || 0) * getQuantity(a), a.currency) - convert((parseFloat(b.materialCost) || 0) * getQuantity(b), b.currency);
       case 'A-Z':      return (a.itemName || '').localeCompare(b.itemName || '');
       default:         return new Date(b.createdAt) - new Date(a.createdAt);
     }

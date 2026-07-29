@@ -12,10 +12,11 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, loadGoal, saveGoal, getQuantity } from '../utils/storage';
+import { loadFlips, calcProfit, calcMargin, loadGoal, saveGoal } from '../utils/storage';
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
+import { useRates } from '../context/RatesContext';
 import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -24,6 +25,8 @@ const BAR_HALF_HEIGHT = 70;
 export default function DashboardScreen() {
   const { theme } = useTheme();
   const { symbol, convert } = useCurrency();
+  const { labourRate, laserRate } = useRates();
+  const rates = { labourRate, laserRate };
   const styles = makeStyles(theme);
 
   const [flips, setFlips] = useState([]);
@@ -51,13 +54,10 @@ export default function DashboardScreen() {
   const soldFlips = flips.filter((f) => f.status === 'Sold');
   const avgMargin =
     soldFlips.length > 0
-      ? soldFlips.reduce((sum, f) => {
-          const buy = (parseFloat(f.buyPrice) || 0) * getQuantity(f);
-          return sum + (buy > 0 ? (calcProfit(f) / buy) * 100 : 0);
-        }, 0) / soldFlips.length
+      ? soldFlips.reduce((sum, f) => sum + calcMargin(f, rates), 0) / soldFlips.length
       : 0;
 
-  const profitOf = (f) => convert(calcProfit(f), f.currency);
+  const profitOf = (f) => convert(calcProfit(f, rates), f.currency);
 
   const now = new Date();
   const monthlyData = Array.from({ length: 6 }, (_, i) => {
