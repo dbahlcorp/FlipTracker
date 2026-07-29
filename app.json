@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bahlcorp.fliptracker",
-      "buildNumber": "27",
+      "buildNumber": "28",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Add photos to your jobs.",
         "CFBundleDisplayName": "Kerf",
