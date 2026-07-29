@@ -82,8 +82,10 @@ export default function CalendarScreen() {
       if (!key) return;
       const mKey = key.slice(0, 7); // "YYYY-MM"
       if (!map[mKey]) map[mKey] = { profit: 0, revenue: 0, count: 0 };
-      map[mKey].profit += profitOf(flip);
-      map[mKey].revenue += revenueOf(flip);
+      if (isRealized(flip)) {
+        map[mKey].profit += profitOf(flip);
+        map[mKey].revenue += revenueOf(flip);
+      }
       map[mKey].count += 1;
     });
     return map;
@@ -93,8 +95,8 @@ export default function CalendarScreen() {
     const dayFlips = byDate[dateKey] || [];
     return {
       flips: dayFlips,
-      profit: dayFlips.reduce((s, f) => s + profitOf(f), 0),
-      revenue: dayFlips.reduce((s, f) => s + revenueOf(f), 0),
+      profit: dayFlips.filter(isRealized).reduce((s, f) => s + profitOf(f), 0),
+      revenue: dayFlips.filter(isRealized).reduce((s, f) => s + revenueOf(f), 0),
       count: dayFlips.length,
     };
   };
@@ -321,8 +323,8 @@ export default function CalendarScreen() {
       const key = getFlipDateKey(f);
       return key && key.startsWith(`${navYear}`);
     });
-    const yearProfit = yearFlips.reduce((s, f) => s + profitOf(f), 0);
-    const yearRevenue = yearFlips.reduce((s, f) => s + revenueOf(f), 0);
+    const yearProfit = yearFlips.filter(isRealized).reduce((s, f) => s + profitOf(f), 0);
+    const yearRevenue = yearFlips.filter(isRealized).reduce((s, f) => s + revenueOf(f), 0);
 
     const maxMonthProfit = Math.max(
       ...Array.from({ length: 12 }, (_, i) => {

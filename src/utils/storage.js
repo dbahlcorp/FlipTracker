@@ -413,6 +413,10 @@ export const calcBreakEvenQuantity = (flip, rates = DEFAULT_RATES) => {
 
 export const isRealized = (flip) => flip.status === 'Sold';
 
+/** Local calendar date in YYYY-MM-DD form (avoids UTC shifting near midnight). */
+export const toLocalDateKey = (date = new Date()) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
 /** Days between purchase and sale, or null if either date is missing/invalid/negative. */
 export const calcDaysToSell = (flip) => {
   if (!flip.dateBought || !flip.dateSold) return null;

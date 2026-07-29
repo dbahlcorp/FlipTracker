@@ -30,6 +30,7 @@ import {
   calcProfit,
   calcMargin,
   calcBreakEvenQuantity,
+  toLocalDateKey,
 } from '../utils/storage';
 
 function PickerField({ label, options, value, onChange, styles }) {
@@ -90,6 +91,13 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
   const symbol = CURRENCIES[formCurrency] || '$';
 
   const set = (key) => (val) => setForm((f) => ({ ...f, [key]: val }));
+  const setStatus = (status) => setForm((current) => ({
+    ...current,
+    status,
+    dateSold: status === 'Sold'
+      ? (current.dateSold || toLocalDateKey())
+      : '',
+  }));
 
   const pickPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -111,6 +119,48 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
   const handleSave = async () => {
     if (!form.itemName.trim()) {
       Alert.alert('Missing Info', 'Please enter an item name.');
+      return;
+    }
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+    const isValidDate = (value) => {
+      if (!value) return true;
+      if (!datePattern.test(value)) return false;
+      const parsed = new Date(`${value}T00:00:00`);
+      return !Number.isNaN(parsed.getTime()) && toLocalDateKey(parsed) === value;
+    };
+    const hasInvalidDate = [form.dateBought, form.dateSold].some((value) => !isValidDate(value));
+    if (hasInvalidDate) {
+      Alert.alert('Invalid Date', 'Enter dates in YYYY-MM-DD format.');
+      return;
+    }
+    if (form.dateBought && form.dateSold && form.dateSold < form.dateBought) {
+      Alert.alert('Invalid Sale Date', 'Date Sold cannot be earlier than Date Made.');
+      return;
+    }
+    const quantityValue = Number(form.quantity);
+    if (!Number.isInteger(quantityValue) || quantityValue < 1) {
+      Alert.alert('Invalid Quantity', 'Quantity must be a whole number of at least 1.');
+      return;
+    }
+    const nonNegativeFields = [
+      ['Material Cost', form.materialCost],
+      ['Consumables', form.consumables],
+      ['Labour Time', form.labourTime],
+      ['Laser Time', form.laserTime],
+      ['Packaging', form.packaging],
+      ['Shipping', form.shipping],
+      ['Marketplace Fees', form.marketplaceFees],
+      ['Selling Price', form.sellingPrice],
+    ];
+    const invalidAmount = nonNegativeFields.find(([, value]) =>
+      value !== '' && (!Number.isFinite(Number(value)) || Number(value) < 0)
+    );
+    if (invalidAmount) {
+      Alert.alert('Invalid Amount', `${invalidAmount[0]} must be zero or greater.`);
+      return;
+    }
+    if (form.status === 'Sold' && !(Number(form.sellingPrice) > 0)) {
+      Alert.alert('Selling Price Required', 'Enter a selling price before marking this job as Sold.');
       return;
     }
     setSaving(true);
@@ -328,7 +378,7 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
           label="Status"
           options={STATUSES}
           value={form.status}
-          onChange={set('status')}
+          onChange={setStatus}
           styles={styles}
         />
 

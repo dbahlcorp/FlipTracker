@@ -62,6 +62,7 @@ export default function AnalyticsScreen() {
 
   const profitOf = (f) => convert(calcProfit(f, rates), f.currency);
   const soldFlips = flips.filter(isRealized);
+  const openFlips = flips.filter((f) => !isRealized(f));
 
   const bestFlip = soldFlips.reduce(
     (best, f) => {
@@ -71,9 +72,10 @@ export default function AnalyticsScreen() {
     { profit: -Infinity, itemName: null }
   );
 
-  const totalCost = flips.reduce((sum, f) => sum + convert(calcTotalCost(f, rates), f.currency), 0);
-  const totalRevenue = flips.reduce((sum, f) => sum + convert((parseFloat(f.sellingPrice) || 0) * getQuantity(f), f.currency), 0);
-  const totalProfit = flips.reduce((sum, f) => sum + profitOf(f), 0);
+  const realizedCost = soldFlips.reduce((sum, f) => sum + convert(calcTotalCost(f, rates), f.currency), 0);
+  const openJobCost = openFlips.reduce((sum, f) => sum + convert(calcTotalCost(f, rates), f.currency), 0);
+  const totalRevenue = soldFlips.reduce((sum, f) => sum + convert((parseFloat(f.sellingPrice) || 0) * getQuantity(f), f.currency), 0);
+  const totalProfit = soldFlips.reduce((sum, f) => sum + profitOf(f), 0);
   const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
   // Days-to-sell / sell-through
@@ -81,10 +83,12 @@ export default function AnalyticsScreen() {
   const avgDaysToSell = daysToSellValues.length > 0
     ? daysToSellValues.reduce((s, d) => s + d, 0) / daysToSellValues.length
     : null;
-  const sellThroughRate = flips.length > 0 ? (soldFlips.length / flips.length) * 100 : 0;
+  const totalUnits = flips.reduce((sum, f) => sum + getQuantity(f), 0);
+  const soldUnits = soldFlips.reduce((sum, f) => sum + getQuantity(f), 0);
+  const sellThroughRate = totalUnits > 0 ? (soldUnits / totalUnits) * 100 : 0;
 
   const platformData = PLATFORMS.map((p) => {
-    const pFlips = flips.filter((f) => f.platform === p);
+    const pFlips = soldFlips.filter((f) => f.platform === p);
     return {
       label: p,
       count: pFlips.length,
@@ -114,7 +118,9 @@ export default function AnalyticsScreen() {
         {bestFlip.itemName ? (
           <View style={styles.bestFlipContent}>
             <Text style={styles.bestFlipName}>{bestFlip.itemName}</Text>
-            <Text style={styles.bestFlipProfit}>+{symbol}{bestFlip.profit.toFixed(2)}</Text>
+            <Text style={[styles.bestFlipProfit, { color: bestFlip.profit >= 0 ? theme.brandText : theme.danger }]}>
+              {bestFlip.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(bestFlip.profit).toFixed(2)}
+            </Text>
           </View>
         ) : (
           <Text style={styles.bestFlipEmpty}>No sold jobs yet</Text>
@@ -124,10 +130,11 @@ export default function AnalyticsScreen() {
       {/* Financial Overview */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Financial Overview</Text>
+        <Text style={styles.sectionSub}>Revenue and profit include sold jobs only.</Text>
         <View style={styles.finRow}>
           <View style={styles.finCard}>
-            <Text style={styles.finLabel}>Total Cost</Text>
-            <Text style={styles.finValue}>{symbol}{totalCost.toFixed(2)}</Text>
+            <Text style={styles.finLabel}>Realized Cost</Text>
+            <Text style={styles.finValue}>{symbol}{realizedCost.toFixed(2)}</Text>
           </View>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Total Revenue</Text>
@@ -142,11 +149,15 @@ export default function AnalyticsScreen() {
             </Text>
           </View>
           <View style={styles.finCard}>
-            <Text style={styles.finLabel}>Profit Margin</Text>
-            <Text style={[styles.finValue, { color: parseFloat(profitMargin) >= 0 ? theme.brandText : theme.danger, fontSize: 24 }]}>
-              {parseFloat(profitMargin) >= 0 ? '+' : ''}{profitMargin}%
-            </Text>
+            <Text style={styles.finLabel}>Open Job Cost</Text>
+            <Text style={[styles.finValue, { fontSize: 24 }]}>{symbol}{openJobCost.toFixed(2)}</Text>
           </View>
+        </View>
+        <View style={styles.marginRow}>
+          <Text style={styles.marginLabel}>Realized profit margin</Text>
+          <Text style={[styles.marginValue, { color: parseFloat(profitMargin) >= 0 ? theme.brandText : theme.danger }]}>
+            {parseFloat(profitMargin) >= 0 ? '+' : ''}{profitMargin}%
+          </Text>
         </View>
       </View>
 
@@ -169,7 +180,7 @@ export default function AnalyticsScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Profit by Platform</Text>
         {platformData.length === 0 ? (
-          <Text style={styles.emptyText}>No data yet</Text>
+          <Text style={styles.emptyText}>No sold jobs yet</Text>
         ) : (
           platformData.map((p) => (
             <BarRow
@@ -256,6 +267,17 @@ const makeStyles = (t) =>
       marginBottom: 4,
     },
     finValue: { fontSize: 18, fontWeight: '700', color: t.text },
+    marginRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginTop: 12,
+      paddingTop: 12,
+      borderTopWidth: 1,
+      borderTopColor: t.border,
+    },
+    marginLabel: { fontSize: 13, color: t.textMuted, fontWeight: '600' },
+    marginValue: { fontSize: 16, fontWeight: '700' },
     catRow: {
       flexDirection: 'row',
       alignItems: 'center',
