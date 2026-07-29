@@ -1,4 +1,5 @@
 import React from 'react';
+import { TouchableOpacity, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -15,6 +16,9 @@ import AddFlipScreen from './src/screens/AddFlipScreen';
 import EditFlipScreen from './src/screens/EditFlipScreen';
 import CalendarScreen from './src/screens/CalendarScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import TemplatesScreen from './src/screens/TemplatesScreen';
+import AddTemplateScreen from './src/screens/AddTemplateScreen';
+import EditTemplateScreen from './src/screens/EditTemplateScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -31,16 +35,38 @@ function FlipsStack() {
         contentStyle: { backgroundColor: theme.bg },
       }}
     >
-      <Stack.Screen name="MyFlipsList" component={MyFlipsScreen} options={{ title: 'My Flips' }} />
+      <Stack.Screen
+        name="MyFlipsList"
+        component={MyFlipsScreen}
+        options={({ navigation }) => ({
+          title: 'My Jobs',
+          headerRight: () => (
+            <TouchableOpacity onPress={() => navigation.navigate('Templates')}>
+              <Text style={{ color: theme.headerText, fontSize: 15, fontWeight: '600' }}>Templates</Text>
+            </TouchableOpacity>
+          ),
+        })}
+      />
       <Stack.Screen
         name="AddFlip"
         component={AddFlipScreen}
-        options={{ title: 'Add Flip', presentation: 'modal' }}
+        options={{ title: 'Add Job', presentation: 'modal' }}
       />
       <Stack.Screen
         name="EditFlip"
         component={EditFlipScreen}
-        options={{ title: 'Edit Flip', presentation: 'modal' }}
+        options={{ title: 'Edit Job', presentation: 'modal' }}
+      />
+      <Stack.Screen name="Templates" component={TemplatesScreen} options={{ title: 'Templates' }} />
+      <Stack.Screen
+        name="AddTemplate"
+        component={AddTemplateScreen}
+        options={{ title: 'New Template', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="EditTemplate"
+        component={EditTemplateScreen}
+        options={{ title: 'Edit Template', presentation: 'modal' }}
       />
     </Stack.Navigator>
   );
@@ -92,7 +118,7 @@ function AppNavigator() {
         })}
       >
         <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
-        <Tab.Screen name="Flips" component={FlipsStack} options={{ headerShown: false, title: 'My Flips' }} />
+        <Tab.Screen name="Flips" component={FlipsStack} options={{ headerShown: false, title: 'My Jobs' }} />
         <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: 'Analytics' }} />
         <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
         <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />

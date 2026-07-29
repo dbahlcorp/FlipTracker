@@ -20,7 +20,7 @@ function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
         <View style={styles.catLabelRow}>
           <Text style={styles.catName}>{label}</Text>
           <Text style={styles.catCount}>
-            {count} flip{count !== 1 ? 's' : ''}
+            {count} job{count !== 1 ? 's' : ''}
           </Text>
         </View>
         <View style={styles.barBg}>
@@ -108,16 +108,16 @@ export default function AnalyticsScreen() {
     >
       <Text style={styles.pageTitle}>Analytics</Text>
 
-      {/* Best Flip */}
+      {/* Best Job */}
       <View style={styles.bestFlipCard}>
-        <Text style={styles.bestFlipLabel}>Best Flip</Text>
+        <Text style={styles.bestFlipLabel}>Best Job</Text>
         {bestFlip.itemName ? (
           <View style={styles.bestFlipContent}>
             <Text style={styles.bestFlipName}>{bestFlip.itemName}</Text>
             <Text style={styles.bestFlipProfit}>+{symbol}{bestFlip.profit.toFixed(2)}</Text>
           </View>
         ) : (
-          <Text style={styles.bestFlipEmpty}>No sold flips yet</Text>
+          <Text style={styles.bestFlipEmpty}>No sold jobs yet</Text>
         )}
       </View>
 

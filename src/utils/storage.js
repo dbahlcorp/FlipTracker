@@ -24,6 +24,13 @@ const RENAMED_COLUMNS = [
 // Columns added since the original schema (beyond `quantity`, which predates this list).
 const ADDED_COLUMNS = ['consumables', 'labourTime', 'laserTime', 'packaging', 'shipping'];
 
+// A template is a saved cost "recipe" for a product you make repeatedly — the same
+// cost fields as a flip, minus the per-batch specifics (quantity, dates, status, notes, photo).
+const TEMPLATE_COLUMNS = [
+  'name', 'materialCost', 'consumables', 'labourTime', 'laserTime',
+  'packaging', 'shipping', 'marketplaceFees', 'sellingPrice', 'platform',
+];
+
 let dbPromise = null;
 
 function getDb() {
@@ -54,6 +61,20 @@ async function openAndInit() {
       photo TEXT,
       currency TEXT,
       quantity TEXT,
+      createdAt TEXT
+    );
+    CREATE TABLE IF NOT EXISTS templates (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT,
+      materialCost TEXT,
+      consumables TEXT,
+      labourTime TEXT,
+      laserTime TEXT,
+      packaging TEXT,
+      shipping TEXT,
+      marketplaceFees TEXT,
+      sellingPrice TEXT,
+      platform TEXT,
       createdAt TEXT
     );
   `);
@@ -177,6 +198,53 @@ export const clearAllFlips = async () => {
   const rows = await db.getAllAsync('SELECT photo FROM flips');
   rows.forEach((r) => deletePhoto(r.photo));
   await db.runAsync('DELETE FROM flips');
+};
+
+export const loadTemplates = async () => {
+  try {
+    const db = await getDb();
+    return await db.getAllAsync('SELECT * FROM templates ORDER BY createdAt DESC');
+  } catch (e) {
+    console.error('Failed to load templates:', e);
+    return [];
+  }
+};
+
+export const addTemplate = async (template) => {
+  const db = await getDb();
+  const newTemplate = {
+    ...template,
+    id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+    createdAt: new Date().toISOString(),
+  };
+  await db.runAsync(
+    `INSERT INTO templates (id, ${TEMPLATE_COLUMNS.join(', ')}, createdAt)
+     VALUES (?, ${TEMPLATE_COLUMNS.map(() => '?').join(', ')}, ?)`,
+    [
+      newTemplate.id,
+      ...TEMPLATE_COLUMNS.map((c) => newTemplate[c] || ''),
+      newTemplate.createdAt,
+    ]
+  );
+  return loadTemplates();
+};
+
+export const updateTemplate = async (id, updates) => {
+  const db = await getDb();
+  const existing = await db.getFirstAsync('SELECT * FROM templates WHERE id = ?', [id]);
+  if (!existing) return loadTemplates();
+  const merged = { ...existing, ...updates };
+  await db.runAsync(
+    `UPDATE templates SET ${TEMPLATE_COLUMNS.map((c) => `${c} = ?`).join(', ')} WHERE id = ?`,
+    [...TEMPLATE_COLUMNS.map((c) => merged[c] || ''), id]
+  );
+  return loadTemplates();
+};
+
+export const deleteTemplate = async (id) => {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM templates WHERE id = ?', [id]);
+  return loadTemplates();
 };
 
 export const exportAllData = async () => {

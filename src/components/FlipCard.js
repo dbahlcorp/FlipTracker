@@ -74,7 +74,7 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Flip',
+      'Delete Job',
       `Delete "${flip.itemName}"? This can't be undone.`,
       [
         { text: 'Cancel', style: 'cancel', onPress: revertSwipe },

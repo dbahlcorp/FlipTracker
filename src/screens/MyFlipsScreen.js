@@ -76,7 +76,7 @@ export default function MyFlipsScreen({ navigation }) {
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search flips..."
+            placeholder="Search jobs..."
             placeholderTextColor={theme.placeholder}
             value={search}
             onChangeText={setSearch}
@@ -129,7 +129,7 @@ export default function MyFlipsScreen({ navigation }) {
 
       <View style={styles.countRow}>
         <Text style={styles.countText}>
-          {sorted.length} {sorted.length === 1 ? 'flip' : 'flips'}
+          {sorted.length} {sorted.length === 1 ? 'job' : 'jobs'}
         </Text>
         <ScrollView
           horizontal
@@ -154,10 +154,10 @@ export default function MyFlipsScreen({ navigation }) {
       {sorted.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyIcon}>📦</Text>
-          <Text style={styles.emptyTitle}>No flips found</Text>
+          <Text style={styles.emptyTitle}>No jobs found</Text>
           <Text style={styles.emptySubtitle}>
             {flips.length === 0
-              ? 'Tap the + button to add your first flip'
+              ? 'Tap the + button to add your first job'
               : 'Try adjusting your filters'}
           </Text>
         </View>

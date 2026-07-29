@@ -264,7 +264,7 @@ export default function CalendarScreen() {
             <Text style={styles.statValue}>{symbol}{stats.revenue.toFixed(2)}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Flips</Text>
+            <Text style={styles.statLabel}>Jobs</Text>
             <Text style={styles.statValue}>{stats.count}</Text>
           </View>
         </View>
@@ -273,7 +273,7 @@ export default function CalendarScreen() {
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📅</Text>
             <Text style={styles.emptyTitle}>No activity</Text>
-            <Text style={styles.emptySubtitle}>No flips on this day</Text>
+            <Text style={styles.emptySubtitle}>No jobs on this day</Text>
           </View>
         ) : (
           <View style={{ paddingHorizontal: 16 }}>
@@ -356,7 +356,7 @@ export default function CalendarScreen() {
             <Text style={[styles.statValue, { fontSize: 15 }]}>{symbol}{yearRevenue.toFixed(2)}</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statLabel}>Flips</Text>
+            <Text style={styles.statLabel}>Jobs</Text>
             <Text style={styles.statValue}>{yearFlips.length}</Text>
           </View>
         </View>
@@ -396,7 +396,7 @@ export default function CalendarScreen() {
                       <Text style={[styles.monthProfit, { color: stats.profit >= 0 ? '#22c55e' : '#ef4444' }]}>
                         {stats.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(stats.profit).toFixed(0)}
                       </Text>
-                      <Text style={styles.monthCount}>{stats.count} flip{stats.count !== 1 ? 's' : ''}</Text>
+                      <Text style={styles.monthCount}>{stats.count} job{stats.count !== 1 ? 's' : ''}</Text>
                     </>
                   ) : (
                     <Text style={styles.monthEmpty}>—</Text>

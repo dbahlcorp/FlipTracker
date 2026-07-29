@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Flip Tracker",
+    "name": "Kerf",
     "slug": "flip-tracker",
     "version": "1.0.1",
     "sdkVersion": "54.0.0",
@@ -22,8 +22,8 @@
       "buildNumber": "26",
       "infoPlist": {
         "NSCameraUsageDescription": "This app does not use the camera.",
-        "NSPhotoLibraryUsageDescription": "Add photos to your flips.",
-        "CFBundleDisplayName": "Flip Tracker",
+        "NSPhotoLibraryUsageDescription": "Add photos to your jobs.",
+        "CFBundleDisplayName": "Kerf",
         "CFBundleShortVersionString": "1.0.1",
         "LSApplicationQueriesSchemes": [],
         "ITSAppUsesNonExemptEncryption": false

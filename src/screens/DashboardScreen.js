@@ -120,7 +120,7 @@ export default function DashboardScreen() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.greeting}>Flip Tracker</Text>
+          <Text style={styles.greeting}>Kerf</Text>
           <Text style={styles.date}>
             {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
@@ -136,7 +136,7 @@ export default function DashboardScreen() {
             value={`${thisMonthProfit >= 0 ? '' : '-'}${symbol}${Math.abs(thisMonthProfit).toFixed(2)}`}
             valueColor={thisMonthProfit >= 0 ? '#22c55e' : '#ef4444'}
           />
-          <MetricCard label="Total Flips" value={totalFlips.toString()} />
+          <MetricCard label="Total Jobs" value={totalFlips.toString()} />
         </View>
         <View style={styles.metricsRow}>
           <MetricCard
@@ -219,14 +219,14 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Platform Breakdown</Text>
           {platformData.length === 0 ? (
-            <Text style={styles.emptyText}>No flips yet. Add your first flip!</Text>
+            <Text style={styles.emptyText}>No jobs yet. Add your first job!</Text>
           ) : (
             platformData.map((p) => (
               <View key={p.platform} style={styles.platformRow}>
                 <View>
                   <Text style={styles.platformName}>{p.platform}</Text>
                   <Text style={styles.platformCount}>
-                    {p.count} flip{p.count !== 1 ? 's' : ''}
+                    {p.count} job{p.count !== 1 ? 's' : ''}
                   </Text>
                 </View>
                 <Text

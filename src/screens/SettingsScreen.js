@@ -62,14 +62,14 @@ export default function SettingsScreen() {
     setExporting(true);
     try {
       const data = await exportAllData();
-      const file = new File(Paths.cache, `flip-tracker-export-${Date.now()}.json`);
+      const file = new File(Paths.cache, `kerf-export-${Date.now()}.json`);
       file.create();
       file.write(JSON.stringify(data, null, 2));
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'application/json',
-          dialogTitle: 'Export Flip Tracker Data',
+          dialogTitle: 'Export Kerf Data',
         });
       } else {
         Alert.alert('Sharing unavailable', `Export saved to ${file.uri}`);
@@ -84,7 +84,7 @@ export default function SettingsScreen() {
   const handleClearData = () => {
     Alert.alert(
       'Clear All Data',
-      'This permanently deletes every flip and photo on this device. This cannot be undone.',
+      'This permanently deletes every job and photo on this device. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -93,7 +93,7 @@ export default function SettingsScreen() {
           onPress: () => {
             Alert.alert(
               'Are you sure?',
-              'Last chance — all flip history will be lost.',
+              'Last chance — all job history will be lost.',
               [
                 { text: 'Cancel', style: 'cancel' },
                 {
@@ -104,7 +104,7 @@ export default function SettingsScreen() {
                     await saveGoal(0);
                     setGoal(0);
                     setGoalInput('');
-                    Alert.alert('Done', 'All flip data has been cleared.');
+                    Alert.alert('Done', 'All job data has been cleared.');
                   },
                 },
               ]
@@ -137,7 +137,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Display Currency</Text>
           <Text style={styles.sectionSub}>
-            Each flip keeps the currency it was entered in — amounts are converted to this display
+            Each job keeps the currency it was entered in — amounts are converted to this display
             currency using fixed exchange rates.
           </Text>
           <View style={styles.chipRow}>
@@ -158,7 +158,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Cost Rates</Text>
           <Text style={styles.sectionSub}>
-            Used to auto-calculate Labour Cost and Laser Cost from the time entered on a flip.
+            Used to auto-calculate Labour Cost and Laser Cost from the time entered on a job.
           </Text>
           <Text style={styles.inputLabel}>Hourly Labour Rate</Text>
           <View style={styles.inputWrapper}>
