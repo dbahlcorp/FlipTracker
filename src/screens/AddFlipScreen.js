@@ -8,7 +8,6 @@ export default function AddFlipScreen({ navigation }) {
 
   const initialForm = {
     itemName: '',
-    category: 'Phones',
     materialCost: '',
     consumables: '0',
     labourTime: '0',
@@ -18,8 +17,7 @@ export default function AddFlipScreen({ navigation }) {
     marketplaceFees: '0',
     sellingPrice: '',
     quantity: '1',
-    condition: 'Good',
-    platform: 'Facebook Marketplace',
+    platform: 'Etsy',
     status: 'Active',
     dateBought: new Date().toISOString().split('T')[0],
     dateSold: '',

@@ -7,7 +7,6 @@ export default function EditFlipScreen({ navigation, route }) {
 
   const initialForm = {
     itemName: existing.itemName ?? '',
-    category: existing.category ?? 'Phones',
     materialCost: existing.materialCost ?? '',
     consumables: existing.consumables ?? '0',
     labourTime: existing.labourTime ?? '0',
@@ -17,8 +16,7 @@ export default function EditFlipScreen({ navigation, route }) {
     marketplaceFees: existing.marketplaceFees ?? '0',
     sellingPrice: existing.sellingPrice ?? '',
     quantity: existing.quantity ?? '1',
-    condition: existing.condition ?? 'Good',
-    platform: existing.platform ?? 'Facebook Marketplace',
+    platform: existing.platform ?? 'Etsy',
     status: existing.status ?? 'Active',
     dateBought: existing.dateBought ?? '',
     dateSold: existing.dateSold ?? '',

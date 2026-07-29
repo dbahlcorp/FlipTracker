@@ -8,8 +8,8 @@ const LEGACY_CURRENCY_KEY = '@flip_tracker_currency';
 const MIGRATION_DONE_KEY = '@flip_tracker_sqlite_migrated_v1';
 
 const FLIP_COLUMNS = [
-  'itemName', 'category', 'materialCost', 'consumables', 'labourTime', 'laserTime',
-  'packaging', 'shipping', 'marketplaceFees', 'sellingPrice', 'condition',
+  'itemName', 'materialCost', 'consumables', 'labourTime', 'laserTime',
+  'packaging', 'shipping', 'marketplaceFees', 'sellingPrice',
   'platform', 'status', 'dateBought', 'dateSold', 'notes', 'photo', 'currency', 'quantity',
 ];
 
@@ -38,7 +38,6 @@ async function openAndInit() {
     CREATE TABLE IF NOT EXISTS flips (
       id TEXT PRIMARY KEY NOT NULL,
       itemName TEXT,
-      category TEXT,
       materialCost TEXT,
       consumables TEXT,
       labourTime TEXT,
@@ -47,7 +46,6 @@ async function openAndInit() {
       shipping TEXT,
       marketplaceFees TEXT,
       sellingPrice TEXT,
-      condition TEXT,
       platform TEXT,
       status TEXT,
       dateBought TEXT,
@@ -98,17 +96,18 @@ async function migrateFromAsyncStorage(db) {
         photo = saveBase64Photo(photo) || '';
       }
       // Legacy exports may predate the material/labour/laser cost fields, or still use
-      // the old buyPrice/sellPrice/fees names — fall back to those where present.
+      // the old buyPrice/sellPrice/fees names — fall back to those where present. Any
+      // legacy category/condition values are dropped; those fields no longer exist.
       await db.runAsync(
         `INSERT OR REPLACE INTO flips
-          (id, itemName, category, materialCost, consumables, labourTime, laserTime, packaging, shipping, marketplaceFees, sellingPrice, condition, platform, status, dateBought, dateSold, notes, photo, currency, quantity, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          (id, itemName, materialCost, consumables, labourTime, laserTime, packaging, shipping, marketplaceFees, sellingPrice, platform, status, dateBought, dateSold, notes, photo, currency, quantity, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
-          flip.id, flip.itemName || '', flip.category || '',
+          flip.id, flip.itemName || '',
           flip.materialCost || flip.buyPrice || '', flip.consumables || '',
           flip.labourTime || '', flip.laserTime || '', flip.packaging || '', flip.shipping || '',
           flip.marketplaceFees || flip.fees || '', flip.sellingPrice || flip.sellPrice || '',
-          flip.condition || '', flip.platform || '', flip.status || '',
+          flip.platform || '', flip.status || '',
           flip.dateBought || '', flip.dateSold || '', flip.notes || '', photo,
           flip.currency || legacyCurrency, flip.quantity || '1', flip.createdAt || new Date().toISOString(),
         ]

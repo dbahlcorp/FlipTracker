@@ -16,8 +16,6 @@ import { useTheme } from '../context/ThemeContext';
 import { CURRENCIES } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import {
-  CATEGORIES,
-  CONDITIONS,
   PLATFORMS,
   STATUSES,
   TABLET_CONTENT_MAX_WIDTH,
@@ -142,18 +140,10 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
       >
         <InputField
           label="Item Name *"
-          placeholder="e.g. iPhone 14 Pro"
+          placeholder="e.g. Oak Coaster Set"
           value={form.itemName}
           onChange={set('itemName')}
           theme={theme}
-          styles={styles}
-        />
-
-        <PickerField
-          label="Category"
-          options={CATEGORIES}
-          value={form.category}
-          onChange={set('category')}
           styles={styles}
         />
 
@@ -324,14 +314,6 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
         ) : null}
 
         <PickerField
-          label="Condition"
-          options={CONDITIONS}
-          value={form.condition}
-          onChange={set('condition')}
-          styles={styles}
-        />
-
-        <PickerField
           label="Platform"
           options={PLATFORMS}
           value={form.platform}
@@ -350,7 +332,7 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
         <View style={styles.row}>
           <View style={{ flex: 1, marginRight: 8 }}>
             <InputField
-              label="Date Bought"
+              label="Date Made"
               placeholder="YYYY-MM-DD"
               value={form.dateBought}
               onChange={set('dateBought')}

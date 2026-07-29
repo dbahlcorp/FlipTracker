@@ -131,10 +131,6 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
                 {flip.itemName}{qty > 1 ? ` ×${qty}` : ''}
               </Text>
               <View style={styles.metaRow}>
-                <Text style={styles.meta}>{flip.category}</Text>
-                <Text style={styles.dot}>·</Text>
-                <Text style={styles.meta}>{flip.condition}</Text>
-                <Text style={styles.dot}>·</Text>
                 <Text style={styles.meta}>{flip.platform}</Text>
               </View>
               {flip.notes ? (

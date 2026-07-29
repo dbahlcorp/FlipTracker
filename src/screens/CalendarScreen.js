@@ -198,7 +198,7 @@ export default function CalendarScreen() {
                     <Text style={styles.miniFlipName} numberOfLines={1}>
                       {flip.itemName}{getQuantity(flip) > 1 ? ` ×${getQuantity(flip)}` : ''}
                     </Text>
-                    <Text style={styles.miniFlipMeta}>{flip.status} · {flip.category}</Text>
+                    <Text style={styles.miniFlipMeta}>{flip.status} · {flip.platform}</Text>
                   </View>
                   {sold ? (
                     <Text style={[styles.miniFlipProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
@@ -295,7 +295,7 @@ export default function CalendarScreen() {
                       <Text style={[styles.flipCardProfit, { color: theme.textMuted, fontSize: 13 }]}>Unsold</Text>
                     )}
                   </View>
-                  <Text style={styles.flipCardMeta}>{flip.category} · {flip.condition} · {flip.platform}</Text>
+                  <Text style={styles.flipCardMeta}>{flip.platform}</Text>
                   <View style={styles.flipCardPrices}>
                     <Text style={styles.priceChip}>Material {symbol}{money(flip.materialCost)}</Text>
                     <Text style={styles.priceChip}>

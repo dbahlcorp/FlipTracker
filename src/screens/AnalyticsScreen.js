@@ -11,7 +11,7 @@ import { loadFlips, calcProfit, calcTotalCost, calcDaysToSell, isRealized, getQu
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
-import { CATEGORIES, PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
+import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
   return (
@@ -92,19 +92,7 @@ export default function AnalyticsScreen() {
     };
   }).filter((p) => p.count > 0);
 
-  const categoryData = CATEGORIES.map((cat) => {
-    const cFlips = flips.filter((f) => f.category === cat);
-    return {
-      label: cat,
-      count: cFlips.length,
-      amount: cFlips.reduce((sum, f) => sum + profitOf(f), 0),
-    };
-  })
-    .filter((c) => c.count > 0)
-    .sort((a, b) => b.amount - a.amount);
-
   const maxPlatformAbs = Math.max(...platformData.map((p) => Math.abs(p.amount)), 1);
-  const maxCatAbs = Math.max(...categoryData.map((c) => Math.abs(c.amount)), 1);
 
   return (
     <ScrollView
@@ -185,18 +173,6 @@ export default function AnalyticsScreen() {
         ) : (
           platformData.map((p) => (
             <BarRow key={p.label} label={p.label} count={p.count} amount={p.amount} maxAbs={maxPlatformAbs} symbol={symbol} styles={styles} />
-          ))
-        )}
-      </View>
-
-      {/* Category Breakdown */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Category Breakdown</Text>
-        {categoryData.length === 0 ? (
-          <Text style={styles.emptyText}>No data yet</Text>
-        ) : (
-          categoryData.map((c) => (
-            <BarRow key={c.label} label={c.label} count={c.count} amount={c.amount} maxAbs={maxCatAbs} symbol={symbol} styles={styles} />
           ))
         )}
       </View>
