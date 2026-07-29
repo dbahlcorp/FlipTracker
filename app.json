@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Kerf",
-    "slug": "kerf",
+    "slug": "flip-tracker",
     "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
