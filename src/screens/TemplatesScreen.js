@@ -11,7 +11,7 @@ import { loadTemplates, calcProfit, calcMargin } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
-import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
+import { BRAND, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 export default function TemplatesScreen({ navigation }) {
   const { theme } = useTheme();
