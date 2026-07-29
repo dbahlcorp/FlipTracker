@@ -12,7 +12,9 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../context/ThemeContext';
+import { BRAND } from '../constants';
 import { CURRENCIES } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import {
@@ -64,6 +66,7 @@ function InputField({ label, placeholder, value, onChange, keyboardType = 'defau
           value={value}
           onChangeText={onChange}
           keyboardType={keyboardType}
+          accessibilityLabel={label}
         />
       </View>
     </View>
@@ -276,7 +279,7 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
             styles.summaryCard,
             { borderColor: previewProfit >= 0 ? '#dcfce7' : '#fee2e2',
               backgroundColor: previewProfit >= 0
-                ? (theme.isDark ? '#14532d' : '#f0fdf4')
+                ? theme.brandTint
                 : (theme.isDark ? '#450a0a' : '#fff5f5') }
           ]}>
             {(labourCost > 0 || laserCost > 0) ? (
@@ -294,13 +297,13 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
             <View style={styles.summaryDivider} />
             <View style={styles.summaryRow}>
               <Text style={styles.profitLabel}>Profit</Text>
-              <Text style={[styles.profitValue, { color: previewProfit >= 0 ? '#22c55e' : '#ef4444' }]}>
+              <Text style={[styles.profitValue, { color: previewProfit >= 0 ? theme.brandText : theme.danger }]}>
                 {previewProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(previewProfit).toFixed(2)}
               </Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summarySubLabel}>Profit Margin</Text>
-              <Text style={[styles.summarySubValue, { color: previewMargin >= 0 ? '#22c55e' : '#ef4444', fontWeight: '700' }]}>
+              <Text style={[styles.summarySubValue, { color: previewMargin >= 0 ? theme.brandText : theme.danger, fontWeight: '700' }]}>
                 {previewMargin.toFixed(1)}%
               </Text>
             </View>
@@ -373,19 +376,31 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
           {form.photo ? (
             <View style={styles.photoContainer}>
               <Image source={{ uri: form.photo }} style={styles.photoPreview} />
-              <TouchableOpacity style={styles.photoAction} onPress={pickPhoto}>
+              <TouchableOpacity
+                style={styles.photoAction}
+                onPress={pickPhoto}
+                accessibilityRole="button"
+                accessibilityLabel="Change job photo"
+              >
                 <Text style={styles.photoActionText}>Change</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.photoAction, styles.photoRemove]}
                 onPress={() => set('photo')('')}
+                accessibilityRole="button"
+                accessibilityLabel="Remove job photo"
               >
                 <Text style={[styles.photoActionText, { color: '#ef4444' }]}>Remove</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
-              <Text style={styles.photoBtnIcon}>📷</Text>
+            <TouchableOpacity
+              style={styles.photoBtn}
+              onPress={pickPhoto}
+              accessibilityRole="button"
+              accessibilityLabel="Add job photo"
+            >
+              <Ionicons name="image-outline" size={22} color={theme.textMuted} />
               <Text style={styles.photoBtnText}>Add Photo</Text>
             </TouchableOpacity>
           )}
@@ -446,7 +461,7 @@ const makeStyles = (t) =>
       borderColor: t.borderStrong,
       backgroundColor: t.card,
     },
-    chipActive: { borderColor: '#22c55e', backgroundColor: t.isDark ? '#14532d' : '#f0fdf4' },
+    chipActive: { borderColor: BRAND.primary, backgroundColor: t.brandTint },
     chipText: { fontSize: 13, color: t.textMuted, fontWeight: '500' },
     chipTextActive: { color: t.isDark ? '#4ade80' : '#16a34a', fontWeight: '700' },
     row: { flexDirection: 'row', marginBottom: 0 },
@@ -478,7 +493,6 @@ const makeStyles = (t) =>
       paddingVertical: 20,
       gap: 8,
     },
-    photoBtnIcon: { fontSize: 22 },
     photoBtnText: { fontSize: 15, color: t.textMuted, fontWeight: '500' },
     photoContainer: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     photoPreview: { width: 80, height: 80, borderRadius: 10 },
@@ -493,17 +507,17 @@ const makeStyles = (t) =>
     photoRemove: { borderColor: '#fca5a5' },
     photoActionText: { fontSize: 13, fontWeight: '600', color: t.textMuted },
     saveBtn: {
-      backgroundColor: '#22c55e',
+      backgroundColor: BRAND.primary,
       borderRadius: 12,
       paddingVertical: 16,
       alignItems: 'center',
       marginTop: 8,
-      shadowColor: '#22c55e',
+      shadowColor: BRAND.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 4,
     },
-    saveBtnDisabled: { backgroundColor: '#86efac' },
-    saveBtnText: { fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 0.3 },
+    saveBtnDisabled: { backgroundColor: BRAND.primaryDisabled },
+    saveBtnText: { fontSize: 16, fontWeight: '700', color: BRAND.onPrimary, letterSpacing: 0.3 },
   });

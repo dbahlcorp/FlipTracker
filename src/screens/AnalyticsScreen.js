@@ -13,7 +13,7 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
-function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
+function BarRow({ label, count, amount, maxAbs, symbol, styles, positiveTextColor, positiveFillColor }) {
   return (
     <View style={styles.catRow}>
       <View style={styles.catLeft}>
@@ -29,13 +29,13 @@ function BarRow({ label, count, amount, maxAbs, symbol, styles }) {
               styles.barFill,
               {
                 width: `${(Math.abs(amount) / maxAbs) * 100}%`,
-                backgroundColor: amount >= 0 ? '#22c55e' : '#ef4444',
+                backgroundColor: amount >= 0 ? positiveFillColor : '#dc2626',
               },
             ]}
           />
         </View>
       </View>
-      <Text style={[styles.catProfit, { color: amount >= 0 ? '#22c55e' : '#ef4444' }]}>
+      <Text style={[styles.catProfit, { color: amount >= 0 ? positiveTextColor : '#dc2626' }]}>
         {amount >= 0 ? '+' : '-'}{symbol}{Math.abs(amount).toFixed(2)}
       </Text>
     </View>
@@ -137,13 +137,13 @@ export default function AnalyticsScreen() {
         <View style={styles.finRow}>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Net Profit</Text>
-            <Text style={[styles.finValue, { color: totalProfit >= 0 ? '#22c55e' : '#ef4444', fontSize: 24 }]}>
+            <Text style={[styles.finValue, { color: totalProfit >= 0 ? theme.brandText : theme.danger, fontSize: 24 }]}>
               {totalProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(totalProfit).toFixed(2)}
             </Text>
           </View>
           <View style={styles.finCard}>
             <Text style={styles.finLabel}>Profit Margin</Text>
-            <Text style={[styles.finValue, { color: parseFloat(profitMargin) >= 0 ? '#22c55e' : '#ef4444', fontSize: 24 }]}>
+            <Text style={[styles.finValue, { color: parseFloat(profitMargin) >= 0 ? theme.brandText : theme.danger, fontSize: 24 }]}>
               {parseFloat(profitMargin) >= 0 ? '+' : ''}{profitMargin}%
             </Text>
           </View>
@@ -172,7 +172,17 @@ export default function AnalyticsScreen() {
           <Text style={styles.emptyText}>No data yet</Text>
         ) : (
           platformData.map((p) => (
-            <BarRow key={p.label} label={p.label} count={p.count} amount={p.amount} maxAbs={maxPlatformAbs} symbol={symbol} styles={styles} />
+            <BarRow
+              key={p.label}
+              label={p.label}
+              count={p.count}
+              amount={p.amount}
+              maxAbs={maxPlatformAbs}
+              symbol={symbol}
+              styles={styles}
+              positiveTextColor={theme.brandText}
+              positiveFillColor={theme.brand}
+            />
           ))
         )}
       </View>
@@ -211,7 +221,7 @@ const makeStyles = (t) =>
       alignItems: 'center',
     },
     bestFlipName: { fontSize: 18, fontWeight: '700', color: t.bestFlipCardText, flex: 1, marginRight: 10 },
-    bestFlipProfit: { fontSize: 24, fontWeight: '800', color: '#22c55e' },
+    bestFlipProfit: { fontSize: 24, fontWeight: '800', color: t.brandText },
     bestFlipEmpty: { color: '#64748b', fontSize: 14 },
     section: {
       backgroundColor: t.card,

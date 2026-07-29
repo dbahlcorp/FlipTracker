@@ -15,6 +15,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { loadFlips, calcProfit, calcMargin, loadGoal, saveGoal } from '../utils/storage';
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
+import { BRAND } from '../constants';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
@@ -89,7 +90,7 @@ export default function DashboardScreen() {
   // Progress toward a goal can't go below 0%, but the amount shown alongside it is
   // the real (possibly negative) monthly profit — a bad month should never be masked.
   const goalProgress = goal > 0 ? Math.min(Math.max(thisMonthProfit, 0) / goal, 1) : 0;
-  const goalBarColor = goalProgress >= 1 ? '#22c55e' : goalProgress >= 0.5 ? '#f59e0b' : '#3b82f6';
+  const goalBarColor = goalProgress >= 1 ? theme.brand : goalProgress >= 0.5 ? '#f59e0b' : '#3b82f6';
 
   const platformData = PLATFORMS
     .map((p) => {
@@ -134,7 +135,7 @@ export default function DashboardScreen() {
           <MetricCard
             label="This Month"
             value={`${thisMonthProfit >= 0 ? '' : '-'}${symbol}${Math.abs(thisMonthProfit).toFixed(2)}`}
-            valueColor={thisMonthProfit >= 0 ? '#22c55e' : '#ef4444'}
+            valueColor={thisMonthProfit >= 0 ? theme.brandText : theme.danger}
           />
           <MetricCard label="Total Jobs" value={totalFlips.toString()} />
         </View>
@@ -142,12 +143,12 @@ export default function DashboardScreen() {
           <MetricCard
             label="This Year"
             value={`${thisYearProfit >= 0 ? '' : '-'}${symbol}${Math.abs(thisYearProfit).toFixed(2)}`}
-            valueColor={thisYearProfit >= 0 ? '#22c55e' : '#ef4444'}
+            valueColor={thisYearProfit >= 0 ? theme.brandText : theme.danger}
           />
           <MetricCard
             label="All-Time Profit"
             value={`${allTimeProfit >= 0 ? '' : '-'}${symbol}${Math.abs(allTimeProfit).toFixed(2)}`}
-            valueColor={allTimeProfit >= 0 ? '#22c55e' : '#ef4444'}
+            valueColor={allTimeProfit >= 0 ? theme.brandText : theme.danger}
           />
         </View>
         <View style={styles.metricsRow}>
@@ -197,7 +198,7 @@ export default function DashboardScreen() {
               const positive = m.value >= 0;
               return (
                 <View key={m.label} style={styles.barColumn}>
-                  <Text style={[styles.barValue, { color: positive ? '#22c55e' : '#ef4444' }]} numberOfLines={1}>
+                  <Text style={[styles.barValue, { color: positive ? theme.brandText : theme.danger }]} numberOfLines={1}>
                     {positive ? '+' : '-'}{symbol}{Math.abs(m.value).toFixed(0)}
                   </Text>
                   <View style={styles.barTrack}>
@@ -232,7 +233,7 @@ export default function DashboardScreen() {
                 <Text
                   style={[
                     styles.platformProfit,
-                    { color: p.profit >= 0 ? '#22c55e' : '#ef4444' },
+                    { color: p.profit >= 0 ? theme.brandText : theme.danger },
                   ]}
                 >
                   {p.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(p.profit).toFixed(2)}
@@ -310,7 +311,7 @@ const makeStyles = (t) =>
     },
     goalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
     goalTitle: { fontSize: 15, fontWeight: '700', color: t.text },
-    goalEdit: { fontSize: 13, fontWeight: '600', color: '#22c55e' },
+    goalEdit: { fontSize: 13, fontWeight: '600', color: t.brandText },
     goalBarBg: { height: 8, backgroundColor: t.border, borderRadius: 4, overflow: 'hidden', marginBottom: 8 },
     goalBarFill: { height: 8, borderRadius: 4 },
     goalFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
@@ -342,7 +343,7 @@ const makeStyles = (t) =>
     barLowerHalf: { height: BAR_HALF_HEIGHT, justifyContent: 'flex-start', alignItems: 'center' },
     barZeroLine: { height: 1, backgroundColor: t.border },
     barFill: { width: '100%', borderRadius: 4 },
-    barPositive: { backgroundColor: '#22c55e' },
+    barPositive: { backgroundColor: BRAND.primary },
     barNegative: { backgroundColor: '#ef4444' },
     barMonthLabel: { fontSize: 11, color: t.textFaint, marginTop: 6, fontWeight: '500' },
     platformRow: {
@@ -398,8 +399,8 @@ const makeStyles = (t) =>
       flex: 1,
       paddingVertical: 13,
       borderRadius: 10,
-      backgroundColor: '#22c55e',
+      backgroundColor: BRAND.primary,
       alignItems: 'center',
     },
-    modalSaveText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+    modalSaveText: { fontSize: 15, fontWeight: '700', color: BRAND.onPrimary },
   });

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BRAND } from '../constants';
 
 const THEME_KEY = '@flip_tracker_theme';
 
@@ -26,6 +27,13 @@ export const LIGHT = {
   header: '#ffffff',
   headerText: '#111827',
   placeholder: '#d1d5db',
+  brand: BRAND.primary,
+  brandPressed: BRAND.primaryPressed,
+  brandDisabled: BRAND.primaryDisabled,
+  brandTint: BRAND.primaryTintLight,
+  brandText: BRAND.primaryTextLight,
+  onBrand: BRAND.onPrimary,
+  danger: BRAND.danger,
 };
 
 export const DARK = {
@@ -51,6 +59,13 @@ export const DARK = {
   header: '#1e293b',
   headerText: '#f8fafc',
   placeholder: '#475569',
+  brand: BRAND.primary,
+  brandPressed: BRAND.primaryPressed,
+  brandDisabled: BRAND.primaryDisabled,
+  brandTint: BRAND.primaryTintDark,
+  brandText: BRAND.primaryTextDark,
+  onBrand: BRAND.onPrimary,
+  danger: BRAND.danger,
 };
 
 const ThemeContext = createContext({

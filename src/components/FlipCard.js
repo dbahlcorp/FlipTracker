@@ -40,7 +40,7 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   const profit = convert(calcProfit(flip, rates), flip.currency);
   const margin = calcMargin(flip, rates);
   const totalCost = convert(calcTotalCost(flip, rates), flip.currency);
-  const profitColor = profit >= 0 ? '#22c55e' : '#ef4444';
+  const profitColor = profit >= 0 ? theme.brandText : theme.danger;
   const money = (amount) => convert(parseFloat(amount) || 0, flip.currency).toFixed(2);
 
   const s = STATUS_COLORS[flip.status] || STATUS_COLORS['Active'];
@@ -107,7 +107,12 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
   return (
     <View style={styles.container}>
       <Animated.View style={[styles.deleteBack, { opacity: deleteOpacity }]}>
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={handleDelete}
+          accessibilityRole="button"
+          accessibilityLabel={`Delete ${flip.itemName}`}
+        >
           <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -121,6 +126,9 @@ export default function FlipCard({ flip, onDelete, onPress, onStatusChange }) {
           onPress={() => onPress && onPress(flip)}
           onLongPress={handleLongPress}
           activeOpacity={0.85}
+          accessibilityRole="button"
+          accessibilityLabel={`${flip.itemName}, ${flip.status}, margin ${margin.toFixed(0)} percent`}
+          accessibilityHint="Opens job details. Long press to change status."
         >
           <View style={styles.row}>
             {flip.photo ? (

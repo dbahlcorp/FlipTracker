@@ -14,10 +14,18 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
 import { useTheme } from '../context/ThemeContext';
 import { useCurrency, CURRENCIES } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
-import { loadGoal, saveGoal, exportAllData, clearAllFlips } from '../utils/storage';
+import {
+  loadGoal,
+  saveGoal,
+  exportAllData,
+  validateBackup,
+  importAllData,
+  clearAllFlips,
+} from '../utils/storage';
 import appJson from '../../app.json';
 import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
@@ -30,6 +38,7 @@ export default function SettingsScreen() {
   const [goal, setGoal] = useState(0);
   const [goalInput, setGoalInput] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [labourRateInput, setLabourRateInput] = useState('');
   const [laserRateInput, setLaserRateInput] = useState('');
 
@@ -62,14 +71,14 @@ export default function SettingsScreen() {
     setExporting(true);
     try {
       const data = await exportAllData();
-      const file = new File(Paths.cache, `kerf-export-${Date.now()}.json`);
+      const file = new File(Paths.cache, `kerf-backup-${Date.now()}.json`);
       file.create();
       file.write(JSON.stringify(data, null, 2));
 
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(file.uri, {
           mimeType: 'application/json',
-          dialogTitle: 'Export Kerf Data',
+          dialogTitle: 'Save Kerf Backup',
         });
       } else {
         Alert.alert('Sharing unavailable', `Export saved to ${file.uri}`);
@@ -78,6 +87,51 @@ export default function SettingsScreen() {
       Alert.alert('Export failed', 'Something went wrong while exporting your data.');
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+        multiple: false,
+      });
+      if (result.canceled) return;
+
+      const backup = JSON.parse(await new File(result.assets[0].uri).text());
+      const summary = validateBackup(backup);
+      const date = summary.exportedAt
+        ? new Date(summary.exportedAt).toLocaleString()
+        : 'Unknown date';
+
+      Alert.alert(
+        'Restore This Backup?',
+        `Backup from ${date}\n${summary.jobCount} jobs and ${summary.templateCount} templates\n\nThis replaces all current Kerf data on this device.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Replace & Restore',
+            style: 'destructive',
+            onPress: async () => {
+              setImporting(true);
+              try {
+                await importAllData(backup);
+                Alert.alert(
+                  'Backup Restored',
+                  'Jobs, templates, photos, goals, rates, and preferences were restored. Restart Kerf to apply appearance and currency changes.'
+                );
+              } catch {
+                Alert.alert('Restore failed', 'Kerf could not restore this backup. Your previous data was kept.');
+              } finally {
+                setImporting(false);
+              }
+            },
+          },
+        ]
+      );
+    } catch {
+      Alert.alert('Invalid backup', 'Choose a valid Kerf backup JSON file.');
     }
   };
 
@@ -128,8 +182,10 @@ export default function SettingsScreen() {
             <Switch
               value={theme.isDark}
               onValueChange={toggleTheme}
-              trackColor={{ false: '#d1d5db', true: '#22c55e' }}
+              trackColor={{ false: '#d1d5db', true: theme.brand }}
               thumbColor="#ffffff"
+              accessibilityLabel="Dark mode"
+              accessibilityRole="switch"
             />
           </View>
         </View>
@@ -170,6 +226,7 @@ export default function SettingsScreen() {
               keyboardType="decimal-pad"
               placeholder="0.00"
               placeholderTextColor={theme.placeholder}
+              accessibilityLabel="Hourly labour rate"
             />
           </View>
           <Text style={styles.inputLabel}>Hourly Laser Rate</Text>
@@ -182,6 +239,7 @@ export default function SettingsScreen() {
               keyboardType="decimal-pad"
               placeholder="0.00"
               placeholderTextColor={theme.placeholder}
+              accessibilityLabel="Hourly laser rate"
             />
           </View>
           <TouchableOpacity style={styles.saveBtn} onPress={handleSaveRates}>
@@ -200,6 +258,7 @@ export default function SettingsScreen() {
               keyboardType="decimal-pad"
               placeholder="0.00"
               placeholderTextColor={theme.placeholder}
+              accessibilityLabel="Monthly profit goal"
             />
           </View>
           <TouchableOpacity style={styles.saveBtn} onPress={handleSaveGoal}>
@@ -209,8 +268,26 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data</Text>
-          <TouchableOpacity style={styles.actionBtn} onPress={handleExport} disabled={exporting}>
-            <Text style={styles.actionBtnText}>{exporting ? 'Exporting…' : 'Export Data (JSON)'}</Text>
+          <Text style={styles.sectionSub}>
+            Backups include jobs, templates, photos, goals, rates, and preferences.
+          </Text>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={handleExport}
+            disabled={exporting || importing}
+            accessibilityRole="button"
+            accessibilityLabel="Save Kerf backup"
+          >
+            <Text style={styles.actionBtnText}>{exporting ? 'Saving backup…' : 'Save Backup'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={handleImport}
+            disabled={exporting || importing}
+            accessibilityRole="button"
+            accessibilityLabel="Restore Kerf backup"
+          >
+            <Text style={styles.actionBtnText}>{importing ? 'Restoring…' : 'Restore Backup'}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.dangerBtn]} onPress={handleClearData}>
             <Text style={[styles.actionBtnText, styles.dangerText]}>Clear All Data</Text>
@@ -259,7 +336,7 @@ const makeStyles = (t) =>
       borderColor: t.borderStrong,
       backgroundColor: t.cardAlt,
     },
-    chipActive: { borderColor: '#22c55e', backgroundColor: t.isDark ? '#14532d' : '#f0fdf4' },
+    chipActive: { borderColor: t.brand, backgroundColor: t.brandTint },
     chipText: { fontSize: 13, color: t.textMuted, fontWeight: '600' },
     chipTextActive: { color: t.isDark ? '#4ade80' : '#16a34a', fontWeight: '700' },
     inputWrapper: {
@@ -275,12 +352,12 @@ const makeStyles = (t) =>
     prefix: { fontSize: 16, color: t.textMuted, marginRight: 4 },
     input: { flex: 1, fontSize: 16, color: t.text, paddingVertical: 12 },
     saveBtn: {
-      backgroundColor: '#22c55e',
+      backgroundColor: t.brand,
       borderRadius: 10,
       paddingVertical: 13,
       alignItems: 'center',
     },
-    saveBtnText: { fontSize: 15, fontWeight: '700', color: '#fff' },
+    saveBtnText: { fontSize: 15, fontWeight: '700', color: t.onBrand },
     actionBtn: {
       borderRadius: 10,
       paddingVertical: 13,

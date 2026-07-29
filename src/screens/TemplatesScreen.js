@@ -47,7 +47,7 @@ export default function TemplatesScreen({ navigation }) {
               >
                 <View style={styles.row}>
                   <Text style={styles.name} numberOfLines={1}>{t.name}</Text>
-                  <Text style={[styles.profit, { color: profit >= 0 ? '#22c55e' : '#ef4444' }]}>
+                  <Text style={[styles.profit, { color: profit >= 0 ? theme.brandText : theme.danger }]}>
                     {profit >= 0 ? '+' : '-'}{symbol}{Math.abs(profit).toFixed(2)}
                   </Text>
                 </View>
@@ -108,8 +108,8 @@ const makeStyles = (t) =>
       alignItems: 'center',
       marginTop: 6,
       borderWidth: 1.5,
-      borderColor: '#22c55e',
-      backgroundColor: t.isDark ? '#14532d' : '#f0fdf4',
+      borderColor: BRAND.primary,
+      backgroundColor: t.brandTint,
     },
     addBtnText: { fontSize: 15, fontWeight: '700', color: t.isDark ? '#4ade80' : '#16a34a' },
   });

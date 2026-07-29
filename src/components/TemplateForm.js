@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
+import { BRAND } from '../constants';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
@@ -57,6 +58,7 @@ function InputField({ label, placeholder, value, onChange, keyboardType = 'defau
           value={value}
           onChangeText={onChange}
           keyboardType={keyboardType}
+          accessibilityLabel={label}
         />
       </View>
     </View>
@@ -227,7 +229,7 @@ export default function TemplateForm({ initialForm, submitLabel, errorMessage, o
             styles.summaryCard,
             { borderColor: previewProfit >= 0 ? '#dcfce7' : '#fee2e2',
               backgroundColor: previewProfit >= 0
-                ? (theme.isDark ? '#14532d' : '#f0fdf4')
+                ? theme.brandTint
                 : (theme.isDark ? '#450a0a' : '#fff5f5') }
           ]}>
             {(labourCost > 0 || laserCost > 0) ? (
@@ -245,13 +247,13 @@ export default function TemplateForm({ initialForm, submitLabel, errorMessage, o
             <View style={styles.summaryDivider} />
             <View style={styles.summaryRow}>
               <Text style={styles.profitLabel}>Profit (per unit)</Text>
-              <Text style={[styles.profitValue, { color: previewProfit >= 0 ? '#22c55e' : '#ef4444' }]}>
+              <Text style={[styles.profitValue, { color: previewProfit >= 0 ? theme.brandText : theme.danger }]}>
                 {previewProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(previewProfit).toFixed(2)}
               </Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={styles.summarySubLabel}>Profit Margin</Text>
-              <Text style={[styles.summarySubValue, { color: previewMargin >= 0 ? '#22c55e' : '#ef4444', fontWeight: '700' }]}>
+              <Text style={[styles.summarySubValue, { color: previewMargin >= 0 ? theme.brandText : theme.danger, fontWeight: '700' }]}>
                 {previewMargin.toFixed(1)}%
               </Text>
             </View>
@@ -342,7 +344,7 @@ const makeStyles = (t) =>
       borderColor: t.borderStrong,
       backgroundColor: t.card,
     },
-    chipActive: { borderColor: '#22c55e', backgroundColor: t.isDark ? '#14532d' : '#f0fdf4' },
+    chipActive: { borderColor: BRAND.primary, backgroundColor: t.brandTint },
     chipText: { fontSize: 13, color: t.textMuted, fontWeight: '500' },
     chipTextActive: { color: t.isDark ? '#4ade80' : '#16a34a', fontWeight: '700' },
     row: { flexDirection: 'row', marginBottom: 0 },
@@ -364,19 +366,19 @@ const makeStyles = (t) =>
     profitLabel: { fontSize: 14, color: t.textSub, fontWeight: '600' },
     profitValue: { fontSize: 22, fontWeight: '800' },
     saveBtn: {
-      backgroundColor: '#22c55e',
+      backgroundColor: BRAND.primary,
       borderRadius: 12,
       paddingVertical: 16,
       alignItems: 'center',
       marginTop: 8,
-      shadowColor: '#22c55e',
+      shadowColor: BRAND.primary,
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.3,
       shadowRadius: 8,
       elevation: 4,
     },
-    saveBtnDisabled: { backgroundColor: '#86efac' },
-    saveBtnText: { fontSize: 16, fontWeight: '700', color: '#fff', letterSpacing: 0.3 },
+    saveBtnDisabled: { backgroundColor: BRAND.primaryDisabled },
+    saveBtnText: { fontSize: 16, fontWeight: '700', color: BRAND.onPrimary, letterSpacing: 0.3 },
     deleteBtn: {
       borderRadius: 12,
       paddingVertical: 14,

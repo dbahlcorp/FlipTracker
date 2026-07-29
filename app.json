@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#020228"
+      "backgroundColor": "#07111F"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -21,7 +21,6 @@
       "bundleIdentifier": "com.bahlcorp.fliptracker",
       "buildNumber": "27",
       "infoPlist": {
-        "NSCameraUsageDescription": "This app does not use the camera.",
         "NSPhotoLibraryUsageDescription": "Add photos to your jobs.",
         "CFBundleDisplayName": "Kerf",
         "CFBundleShortVersionString": "1.0.1",
@@ -42,7 +41,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#07111F"
       },
       "package": "com.dbahlcorp.fliptracker"
     },

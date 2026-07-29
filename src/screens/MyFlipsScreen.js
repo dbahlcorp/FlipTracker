@@ -9,9 +9,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { loadFlips, deleteFlip, updateFlip, calcProfit, getQuantity } from '../utils/storage';
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
+import { BRAND } from '../constants';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import {
@@ -73,17 +75,23 @@ export default function MyFlipsScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Ionicons name="search" size={19} color={theme.textMuted} style={styles.searchIcon} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search jobs..."
             placeholderTextColor={theme.placeholder}
             value={search}
             onChangeText={setSearch}
+            accessibilityLabel="Search jobs"
           />
           {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
-              <Text style={styles.clearBtn}>✕</Text>
+            <TouchableOpacity
+              onPress={() => setSearch('')}
+              accessibilityRole="button"
+              accessibilityLabel="Clear job search"
+              hitSlop={10}
+            >
+              <Ionicons name="close-circle" size={20} color={theme.textFaint} />
             </TouchableOpacity>
           )}
         </View>
@@ -100,6 +108,9 @@ export default function MyFlipsScreen({ navigation }) {
             key={p}
             style={[styles.filterChip, platformFilter === p && styles.filterChipActive]}
             onPress={() => setPlatformFilter(p)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: platformFilter === p }}
+            accessibilityLabel={`Filter by platform: ${p}`}
           >
             <Text style={[styles.filterChipText, platformFilter === p && styles.filterChipTextActive]}>
               {p}
@@ -119,6 +130,9 @@ export default function MyFlipsScreen({ navigation }) {
             key={s}
             style={[styles.filterChip, statusFilter === s && styles.filterChipActive]}
             onPress={() => setStatusFilter(s)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: statusFilter === s }}
+            accessibilityLabel={`Filter by status: ${s}`}
           >
             <Text style={[styles.filterChipText, statusFilter === s && styles.filterChipTextActive]}>
               {s}
@@ -142,6 +156,9 @@ export default function MyFlipsScreen({ navigation }) {
               key={s}
               style={[styles.sortChip, sortBy === s && styles.sortChipActive]}
               onPress={() => setSortBy(s)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: sortBy === s }}
+              accessibilityLabel={`Sort jobs by ${s}`}
             >
               <Text style={[styles.sortChipText, sortBy === s && styles.sortChipTextActive]}>
                 {s}
@@ -153,7 +170,7 @@ export default function MyFlipsScreen({ navigation }) {
 
       {sorted.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>📦</Text>
+          <Ionicons name="cube-outline" size={52} color={theme.textFaint} style={styles.emptyIcon} />
           <Text style={styles.emptyTitle}>No jobs found</Text>
           <Text style={styles.emptySubtitle}>
             {flips.length === 0
@@ -182,8 +199,10 @@ export default function MyFlipsScreen({ navigation }) {
         style={styles.fab}
         onPress={() => navigation.navigate('AddFlip')}
         activeOpacity={0.85}
+        accessibilityRole="button"
+        accessibilityLabel="Add job"
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Ionicons name="add" size={32} color="#052e16" />
       </TouchableOpacity>
     </View>
   );
@@ -208,7 +227,7 @@ const makeStyles = (t) =>
       borderWidth: 1.5,
       borderColor: t.borderStrong,
     },
-    searchIcon: { fontSize: 16, marginRight: 8 },
+    searchIcon: { marginRight: 8 },
     searchInput: { flex: 1, fontSize: 15, color: t.text, paddingVertical: 12 },
     clearBtn: { fontSize: 14, color: t.textFaint, padding: 4 },
     filterRow: { maxHeight: 44 },
@@ -221,9 +240,9 @@ const makeStyles = (t) =>
       borderWidth: 1.5,
       borderColor: t.borderStrong,
     },
-    filterChipActive: { backgroundColor: '#22c55e', borderColor: '#22c55e' },
+    filterChipActive: { backgroundColor: BRAND.primary, borderColor: BRAND.primary },
     filterChipText: { fontSize: 13, color: t.textMuted, fontWeight: '500' },
-    filterChipTextActive: { color: '#fff', fontWeight: '700' },
+    filterChipTextActive: { color: BRAND.onPrimary, fontWeight: '700' },
     countRow: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -246,7 +265,7 @@ const makeStyles = (t) =>
     sortChipTextActive: { color: t.isDark ? '#60a5fa' : '#2563eb', fontWeight: '700' },
     list: { paddingTop: 4, paddingBottom: 100 },
     emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 60 },
-    emptyIcon: { fontSize: 48, marginBottom: 12 },
+    emptyIcon: { marginBottom: 12 },
     emptyTitle: { fontSize: 18, fontWeight: '700', color: t.textSub, marginBottom: 6 },
     emptySubtitle: { fontSize: 14, color: t.textFaint, textAlign: 'center', paddingHorizontal: 40 },
     fab: {
@@ -256,10 +275,10 @@ const makeStyles = (t) =>
       width: 58,
       height: 58,
       borderRadius: 29,
-      backgroundColor: '#22c55e',
+      backgroundColor: BRAND.primary,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#22c55e',
+      shadowColor: BRAND.primary,
       shadowOffset: { width: 0, height: 6 },
       shadowOpacity: 0.4,
       shadowRadius: 12,

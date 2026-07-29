@@ -7,8 +7,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { loadFlips, calcProfit, calcMargin, isRealized, getQuantity } from '../utils/storage';
 import { useTheme } from '../context/ThemeContext';
+import { BRAND } from '../constants';
 import { useCurrency } from '../context/CurrencyContext';
 import { useRates } from '../context/RatesContext';
 import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
@@ -163,7 +165,7 @@ export default function CalendarScreen() {
                 </View>
                 {stats.count > 0 && (
                   <Text
-                    style={[styles.cellProfit, { color: profit >= 0 ? '#22c55e' : '#ef4444' }]}
+                    style={[styles.cellProfit, { color: profit >= 0 ? theme.brandText : theme.danger }]}
                     numberOfLines={1}
                   >
                     {profit >= 0 ? '+' : '-'}{symbol}{Math.abs(profit).toFixed(0)}
@@ -181,7 +183,7 @@ export default function CalendarScreen() {
               {selectedDay.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
             </Text>
             {selectedStats.count > 0 && (
-              <Text style={[styles.dayPanelProfit, { color: selectedStats.profit >= 0 ? '#22c55e' : '#ef4444' }]}>
+              <Text style={[styles.dayPanelProfit, { color: selectedStats.profit >= 0 ? theme.brandText : theme.danger }]}>
                 {selectedStats.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(selectedStats.profit).toFixed(2)}
               </Text>
             )}
@@ -201,7 +203,7 @@ export default function CalendarScreen() {
                     <Text style={styles.miniFlipMeta}>{flip.status} · {flip.platform}</Text>
                   </View>
                   {sold ? (
-                    <Text style={[styles.miniFlipProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
+                    <Text style={[styles.miniFlipProfit, { color: p >= 0 ? theme.brandText : theme.danger }]}>
                       {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}
                     </Text>
                   ) : (
@@ -243,7 +245,7 @@ export default function CalendarScreen() {
             <Text style={styles.navArrow}>‹</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={goToToday}>
-            <Text style={[styles.navTitle, isToday && { color: '#22c55e' }]}>
+            <Text style={[styles.navTitle, isToday && { color: theme.brandText }]}>
               {selectedDay.toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric', year: 'numeric' })}
             </Text>
           </TouchableOpacity>
@@ -255,7 +257,7 @@ export default function CalendarScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Profit</Text>
-            <Text style={[styles.statValue, { color: stats.profit >= 0 ? '#22c55e' : '#ef4444' }]}>
+            <Text style={[styles.statValue, { color: stats.profit >= 0 ? theme.brandText : theme.danger }]}>
               {stats.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(stats.profit).toFixed(2)}
             </Text>
           </View>
@@ -271,7 +273,7 @@ export default function CalendarScreen() {
 
         {stats.count === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📅</Text>
+            <Ionicons name="calendar-outline" size={52} color={theme.textFaint} style={styles.emptyIcon} />
             <Text style={styles.emptyTitle}>No activity</Text>
             <Text style={styles.emptySubtitle}>No jobs on this day</Text>
           </View>
@@ -288,7 +290,7 @@ export default function CalendarScreen() {
                       {flip.itemName}{getQuantity(flip) > 1 ? ` ×${getQuantity(flip)}` : ''}
                     </Text>
                     {sold ? (
-                      <Text style={[styles.flipCardProfit, { color: p >= 0 ? '#22c55e' : '#ef4444' }]}>
+                      <Text style={[styles.flipCardProfit, { color: p >= 0 ? theme.brandText : theme.danger }]}>
                         {p >= 0 ? '+' : '-'}{symbol}{Math.abs(p).toFixed(2)}
                       </Text>
                     ) : (
@@ -347,7 +349,7 @@ export default function CalendarScreen() {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statLabel}>Year Profit</Text>
-            <Text style={[styles.statValue, { color: yearProfit >= 0 ? '#22c55e' : '#ef4444', fontSize: 15 }]}>
+            <Text style={[styles.statValue, { color: yearProfit >= 0 ? theme.brandText : theme.danger, fontSize: 15 }]}>
               {yearProfit >= 0 ? '+' : '-'}{symbol}{Math.abs(yearProfit).toFixed(2)}
             </Text>
           </View>
@@ -381,19 +383,19 @@ export default function CalendarScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.monthRowLabel, isCurrent && { color: '#22c55e' }]}>
+                <Text style={[styles.monthRowLabel, isCurrent && { color: theme.brandText }]}>
                   {MONTH_SHORT[i]}
                 </Text>
                 <View style={styles.monthBarBg}>
                   <View style={[
                     styles.monthBarFill,
-                    { width: barWidth, backgroundColor: stats.profit >= 0 ? '#22c55e' : '#ef4444' },
+                    { width: barWidth, backgroundColor: stats.profit >= 0 ? BRAND.primary : '#ef4444' },
                   ]} />
                 </View>
                 <View style={styles.monthRowRight}>
                   {stats.count > 0 ? (
                     <>
-                      <Text style={[styles.monthProfit, { color: stats.profit >= 0 ? '#22c55e' : '#ef4444' }]}>
+                      <Text style={[styles.monthProfit, { color: stats.profit >= 0 ? theme.brandText : theme.danger }]}>
                         {stats.profit >= 0 ? '+' : '-'}{symbol}{Math.abs(stats.profit).toFixed(0)}
                       </Text>
                       <Text style={styles.monthCount}>{stats.count} job{stats.count !== 1 ? 's' : ''}</Text>
@@ -455,9 +457,9 @@ const makeStyles = (t) =>
       borderColor: t.border,
     },
     switchTab: { flex: 1, paddingVertical: 8, borderRadius: 9, alignItems: 'center' },
-    switchTabActive: { backgroundColor: '#22c55e' },
+    switchTabActive: { backgroundColor: BRAND.primary },
     switchTabText: { fontSize: 13, fontWeight: '600', color: t.textMuted },
-    switchTabTextActive: { color: '#fff', fontWeight: '700' },
+    switchTabTextActive: { color: BRAND.onPrimary, fontWeight: '700' },
 
     navRow: {
       flexDirection: 'row',
@@ -477,9 +479,9 @@ const makeStyles = (t) =>
     cell: { width: '14.28%', minHeight: 60, alignItems: 'center', paddingVertical: 4, borderRadius: 8 },
     cellSelected: { backgroundColor: t.isDark ? '#1e3a5f' : '#dbeafe' },
     dayCircle: { width: 30, height: 30, borderRadius: 15, justifyContent: 'center', alignItems: 'center' },
-    dayCircleToday: { backgroundColor: '#22c55e' },
+    dayCircleToday: { backgroundColor: BRAND.primary },
     dayText: { fontSize: 13, fontWeight: '500', color: t.text },
-    dayTextToday: { color: '#fff', fontWeight: '700' },
+    dayTextToday: { color: BRAND.onPrimary, fontWeight: '700' },
     dayTextSelected: { color: t.isDark ? '#60a5fa' : '#2563eb', fontWeight: '700' },
     cellProfit: { fontSize: 9, fontWeight: '700', marginTop: 1 },
 
@@ -521,7 +523,7 @@ const makeStyles = (t) =>
     statValue: { fontSize: 16, fontWeight: '700', color: t.text },
 
     emptyState: { alignItems: 'center', paddingTop: 60 },
-    emptyIcon: { fontSize: 48, marginBottom: 12 },
+    emptyIcon: { marginBottom: 12 },
     emptyTitle: { fontSize: 18, fontWeight: '700', color: t.textSub, marginBottom: 4 },
     emptySubtitle: { fontSize: 14, color: t.textFaint },
 

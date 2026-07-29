@@ -1,6 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { saveBase64Photo, deletePhoto } from './imageStorage';
+import { saveBase64Photo, readPhotoAsDataUri, deletePhoto } from './imageStorage';
 
 const DB_NAME = 'fliptracker.db';
 const LEGACY_FLIPS_KEY = '@flip_tracker_flips';
@@ -248,12 +248,108 @@ export const deleteTemplate = async (id) => {
 };
 
 export const exportAllData = async () => {
-  const [flips, goal] = await Promise.all([loadFlips(), loadGoal()]);
+  const [flips, templates, goal, currency, labourRate, laserRate, theme] = await Promise.all([
+    loadFlips(),
+    loadTemplates(),
+    loadGoal(),
+    AsyncStorage.getItem('@flip_tracker_currency'),
+    AsyncStorage.getItem('@flip_tracker_labour_rate'),
+    AsyncStorage.getItem('@flip_tracker_laser_rate'),
+    AsyncStorage.getItem('@flip_tracker_theme'),
+  ]);
+  const portableFlips = await Promise.all(flips.map(async (flip) => ({
+    ...flip,
+    photo: await readPhotoAsDataUri(flip.photo),
+  })));
+
   return {
+    format: 'kerf-backup',
+    version: 1,
     exportedAt: new Date().toISOString(),
-    goal,
-    flips: flips.map(({ photo, ...rest }) => rest), // omit local file uris; they're device-specific
+    settings: {
+      goal,
+      currency: currency || 'USD',
+      labourRate: parseFloat(labourRate) || 0,
+      laserRate: parseFloat(laserRate) || 0,
+      theme: theme === 'dark' ? 'dark' : 'light',
+    },
+    jobs: portableFlips,
+    templates,
   };
+};
+
+const BACKUP_REQUIRED_JOB_FIELDS = ['id', 'itemName', 'createdAt'];
+
+export const validateBackup = (data) => {
+  if (!data || data.format !== 'kerf-backup' || data.version !== 1) {
+    throw new Error('This is not a supported Kerf backup.');
+  }
+  if (!Array.isArray(data.jobs) || !Array.isArray(data.templates)) {
+    throw new Error('The backup is missing jobs or templates.');
+  }
+  if (data.jobs.some((job) => BACKUP_REQUIRED_JOB_FIELDS.some((field) => typeof job[field] !== 'string'))) {
+    throw new Error('The backup contains an invalid job.');
+  }
+  return {
+    jobCount: data.jobs.length,
+    templateCount: data.templates.length,
+    exportedAt: data.exportedAt,
+  };
+};
+
+/** Replaces local data only after the caller has validated the file and confirmed the action. */
+export const importAllData = async (data) => {
+  validateBackup(data);
+  const db = await getDb();
+  const oldPhotos = await db.getAllAsync('SELECT photo FROM flips');
+  const restoredJobs = data.jobs.map((job) => ({
+    ...job,
+    photo: job.photo ? (saveBase64Photo(job.photo) || '') : '',
+  }));
+
+  await db.execAsync('BEGIN IMMEDIATE TRANSACTION;');
+  try {
+    await db.execAsync('DELETE FROM flips; DELETE FROM templates;');
+    for (const job of restoredJobs) {
+      await db.runAsync(
+        `INSERT INTO flips (id, ${FLIP_COLUMNS.join(', ')}, createdAt)
+         VALUES (?, ${FLIP_COLUMNS.map(() => '?').join(', ')}, ?)`,
+        [
+          job.id,
+          ...FLIP_COLUMNS.map((column) => job[column] || (column === 'quantity' ? '1' : '')),
+          job.createdAt,
+        ]
+      );
+    }
+    for (const template of data.templates) {
+      await db.runAsync(
+        `INSERT INTO templates (id, ${TEMPLATE_COLUMNS.join(', ')}, createdAt)
+         VALUES (?, ${TEMPLATE_COLUMNS.map(() => '?').join(', ')}, ?)`,
+        [
+          template.id || `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+          ...TEMPLATE_COLUMNS.map((column) => template[column] || ''),
+          template.createdAt || new Date().toISOString(),
+        ]
+      );
+    }
+    await db.execAsync('COMMIT;');
+  } catch (error) {
+    await db.execAsync('ROLLBACK;');
+    restoredJobs.forEach((job) => deletePhoto(job.photo));
+    throw error;
+  }
+
+  oldPhotos.forEach((row) => deletePhoto(row.photo));
+  const settings = data.settings || {};
+  await Promise.all([
+    AsyncStorage.setItem(GOAL_KEY, String(parseFloat(settings.goal) || 0)),
+    AsyncStorage.setItem('@flip_tracker_currency', settings.currency || 'USD'),
+    AsyncStorage.setItem('@flip_tracker_labour_rate', String(parseFloat(settings.labourRate) || 0)),
+    AsyncStorage.setItem('@flip_tracker_laser_rate', String(parseFloat(settings.laserRate) || 0)),
+    AsyncStorage.setItem('@flip_tracker_theme', settings.theme === 'dark' ? 'dark' : 'light'),
+  ]);
+
+  return validateBackup(data);
 };
 
 const GOAL_KEY = '@flip_tracker_goal';

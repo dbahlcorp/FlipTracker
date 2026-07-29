@@ -117,7 +117,7 @@ const makeStyles = (t) =>
       borderBottomColor: t.border,
     },
     templateBarText: { fontSize: 14, fontWeight: '600', color: t.textSub, flex: 1, marginRight: 10 },
-    templateBarAction: { fontSize: 14, fontWeight: '700', color: '#22c55e' },
+    templateBarAction: { fontSize: 14, fontWeight: '700', color: t.brandText },
     modalOverlay: {
       flex: 1,
       backgroundColor: 'rgba(0,0,0,0.5)',

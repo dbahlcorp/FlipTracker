@@ -31,6 +31,20 @@ export function saveBase64Photo(dataUri) {
   return file.uri;
 }
 
+/** Reads a locally managed photo into a portable data URI for a complete backup. */
+export async function readPhotoAsDataUri(uri) {
+  if (!uri || !uri.startsWith('file://')) return '';
+  try {
+    const file = new File(uri);
+    if (!file.exists) return '';
+    const ext = (file.extension || 'jpg').replace('.', '').toLowerCase();
+    const mime = ext === 'jpg' ? 'jpeg' : ext;
+    return `data:image/${mime};base64,${await file.base64()}`;
+  } catch {
+    return '';
+  }
+}
+
 /** Deletes a photo previously saved by this module. Safe to call with empty/legacy/missing values. */
 export function deletePhoto(uri) {
   if (!uri || !uri.startsWith('file://')) return;
