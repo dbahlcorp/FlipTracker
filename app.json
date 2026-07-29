@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Kerf",
-    "slug": "flip-tracker",
+    "slug": "kerf",
     "version": "1.0.1",
     "sdkVersion": "54.0.0",
     "orientation": "portrait",
@@ -43,7 +43,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#07111F"
       },
-      "package": "com.dbahlcorp.fliptracker"
+      "package": "com.dbahlcorp.kerf"
     },
     "web": {
       "favicon": "./assets/favicon.png"
