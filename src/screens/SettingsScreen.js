@@ -24,7 +24,7 @@ import {
   exportAllData,
   validateBackup,
   importAllData,
-  clearAllFlips,
+  clearAllData,
 } from '../utils/storage';
 import appJson from '../../app.json';
 import { TABLET_CONTENT_MAX_WIDTH } from '../constants';
@@ -107,7 +107,7 @@ export default function SettingsScreen() {
 
       Alert.alert(
         'Restore This Backup?',
-        `Backup from ${date}\n${summary.jobCount} jobs and ${summary.templateCount} templates\n\nThis replaces all current Kerf data on this device.`,
+        `Backup from ${date}\n${summary.jobCount} jobs, ${summary.templateCount} templates, and ${summary.materialCount} materials\n\nThis replaces all current Kerf data on this device.`,
         [
           { text: 'Cancel', style: 'cancel' },
           {
@@ -119,7 +119,7 @@ export default function SettingsScreen() {
                 await importAllData(backup);
                 Alert.alert(
                   'Backup Restored',
-                  'Jobs, templates, photos, goals, rates, and preferences were restored. Restart Kerf to apply appearance and currency changes.'
+                  'Jobs, templates, materials, photos, goals, rates, and preferences were restored. Restart Kerf to apply appearance and currency changes.'
                 );
               } catch {
                 Alert.alert('Restore failed', 'Kerf could not restore this backup. Your previous data was kept.');
@@ -138,7 +138,7 @@ export default function SettingsScreen() {
   const handleClearData = () => {
     Alert.alert(
       'Clear All Data',
-      'This permanently deletes every job and photo on this device. This cannot be undone.',
+      'This permanently deletes every job, template, material, and photo on this device. This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -154,11 +154,11 @@ export default function SettingsScreen() {
                   text: 'Yes, delete everything',
                   style: 'destructive',
                   onPress: async () => {
-                    await clearAllFlips();
+                    await clearAllData();
                     await saveGoal(0);
                     setGoal(0);
                     setGoalInput('');
-                    Alert.alert('Done', 'All job data has been cleared.');
+                    Alert.alert('Done', 'All jobs, templates, and materials have been cleared.');
                   },
                 },
               ]
@@ -269,7 +269,7 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Data</Text>
           <Text style={styles.sectionSub}>
-            Backups include jobs, templates, photos, goals, rates, and preferences.
+            Backups include jobs, templates, materials, photos, goals, rates, and preferences.
           </Text>
           <TouchableOpacity
             style={styles.actionBtn}

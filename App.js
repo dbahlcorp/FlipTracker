@@ -20,6 +20,9 @@ import SettingsScreen from './src/screens/SettingsScreen';
 import TemplatesScreen from './src/screens/TemplatesScreen';
 import AddTemplateScreen from './src/screens/AddTemplateScreen';
 import EditTemplateScreen from './src/screens/EditTemplateScreen';
+import MaterialsScreen from './src/screens/MaterialsScreen';
+import AddMaterialScreen from './src/screens/AddMaterialScreen';
+import EditMaterialScreen from './src/screens/EditMaterialScreen';
 import OnboardingScreen from './src/components/OnboardingScreen';
 
 const ONBOARDING_KEY = '@kerf_onboarding_complete_v1';
@@ -76,6 +79,37 @@ function FlipsStack() {
   );
 }
 
+function MaterialsStack() {
+  const { theme } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.header },
+        headerTintColor: theme.headerText,
+        headerTitleStyle: { fontWeight: '700' },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: theme.bg },
+      }}
+    >
+      <Stack.Screen
+        name="MaterialsList"
+        component={MaterialsScreen}
+        options={{ title: 'Materials' }}
+      />
+      <Stack.Screen
+        name="AddMaterial"
+        component={AddMaterialScreen}
+        options={{ title: 'Add Material', presentation: 'modal' }}
+      />
+      <Stack.Screen
+        name="EditMaterial"
+        component={EditMaterialScreen}
+        options={{ title: 'Edit Material', presentation: 'modal' }}
+      />
+    </Stack.Navigator>
+  );
+}
+
 function AppNavigator() {
   const { theme } = useTheme();
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -101,6 +135,7 @@ function AppNavigator() {
               Dashboard: focused ? 'grid' : 'grid-outline',
               Flips: focused ? 'albums' : 'albums-outline',
               Analytics: focused ? 'bar-chart' : 'bar-chart-outline',
+              Materials: focused ? 'layers' : 'layers-outline',
               Calendar: focused ? 'calendar' : 'calendar-outline',
               Settings: focused ? 'settings' : 'settings-outline',
             };
@@ -135,6 +170,7 @@ function AppNavigator() {
       >
         <Tab.Screen name="Dashboard" component={DashboardScreen} options={{ title: 'Dashboard' }} />
         <Tab.Screen name="Flips" component={FlipsStack} options={{ headerShown: false, title: 'My Jobs' }} />
+        <Tab.Screen name="Materials" component={MaterialsStack} options={{ headerShown: false, title: 'Materials' }} />
         <Tab.Screen name="Analytics" component={AnalyticsScreen} options={{ title: 'Analytics' }} />
         <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
         <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />

@@ -7,10 +7,18 @@ import {
   FlatList,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { loadFlips, deleteFlip, updateFlip, calcProfit, getQuantity } from '../utils/storage';
+import {
+  loadFlips,
+  deleteFlip,
+  updateFlip,
+  calcProfit,
+  calcTotalCost,
+  toLocalDateKey,
+} from '../utils/storage';
 import FlipCard from '../components/FlipCard';
 import { useTheme } from '../context/ThemeContext';
 import { BRAND } from '../constants';
@@ -49,7 +57,24 @@ export default function MyFlipsScreen({ navigation }) {
   const handleEdit = (flip) => navigation.navigate('EditFlip', { flip });
 
   const handleStatusChange = async (id, newStatus) => {
-    const updated = await updateFlip(id, { status: newStatus });
+    const existing = flips.find((flip) => flip.id === id);
+    if (newStatus === 'Sold' && !(Number(existing?.sellingPrice) > 0)) {
+      Alert.alert(
+        'Selling Price Required',
+        'Add a selling price before marking this job as Sold.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Edit Job', onPress: () => existing && handleEdit(existing) },
+        ]
+      );
+      return;
+    }
+    const updated = await updateFlip(id, {
+      status: newStatus,
+      dateSold: newStatus === 'Sold'
+        ? (existing?.dateSold || toLocalDateKey())
+        : '',
+    });
     setFlips(updated);
   };
 
@@ -65,7 +90,7 @@ export default function MyFlipsScreen({ navigation }) {
       case 'Oldest':   return new Date(a.createdAt) - new Date(b.createdAt);
       case 'Profit ↑': return convert(calcProfit(a, rates), a.currency) - convert(calcProfit(b, rates), b.currency);
       case 'Profit ↓': return convert(calcProfit(b, rates), b.currency) - convert(calcProfit(a, rates), a.currency);
-      case 'Cost ↑':   return convert((parseFloat(a.materialCost) || 0) * getQuantity(a), a.currency) - convert((parseFloat(b.materialCost) || 0) * getQuantity(b), b.currency);
+      case 'Cost ↑':   return convert(calcTotalCost(a, rates), a.currency) - convert(calcTotalCost(b, rates), b.currency);
       case 'A-Z':      return (a.itemName || '').localeCompare(b.itemName || '');
       default:         return new Date(b.createdAt) - new Date(a.createdAt);
     }

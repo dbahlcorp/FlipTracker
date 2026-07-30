@@ -19,7 +19,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.bahlcorp.fliptracker",
-      "buildNumber": "28",
+      "buildNumber": "27",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Add photos to your jobs.",
         "CFBundleDisplayName": "Kerf",
@@ -43,7 +43,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#07111F"
       },
-      "package": "com.dbahlcorp.fliptracker"
+      "package": "com.dbahlcorp.kerf"
     },
     "web": {
       "favicon": "./assets/favicon.png"

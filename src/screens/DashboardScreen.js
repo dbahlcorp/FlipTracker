@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { loadFlips, calcProfit, calcMargin, loadGoal, saveGoal } from '../utils/storage';
+import { loadFlips, calcProfit, calcMargin, loadGoal, saveGoal, isRealized } from '../utils/storage';
 import MetricCard from '../components/MetricCard';
 import { useTheme } from '../context/ThemeContext';
 import { BRAND } from '../constants';
@@ -22,6 +22,8 @@ import { PLATFORMS, TABLET_CONTENT_MAX_WIDTH } from '../constants';
 
 const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const BAR_HALF_HEIGHT = 70;
+const realizedDateOf = (flip) =>
+  new Date(`${flip.dateSold || flip.dateBought || flip.createdAt?.split('T')[0]}T00:00:00`);
 
 export default function DashboardScreen() {
   const { theme } = useTheme();
@@ -51,8 +53,8 @@ export default function DashboardScreen() {
   };
 
   const totalFlips = flips.length;
-  const activeListings = flips.filter((f) => f.status === 'Active').length;
-  const soldFlips = flips.filter((f) => f.status === 'Sold');
+  const openJobs = flips.filter((f) => !isRealized(f)).length;
+  const soldFlips = flips.filter(isRealized);
   const avgMargin =
     soldFlips.length > 0
       ? soldFlips.reduce((sum, f) => sum + calcMargin(f, rates), 0) / soldFlips.length
@@ -65,9 +67,9 @@ export default function DashboardScreen() {
     const d = new Date(now.getFullYear(), now.getMonth() - 5 + i, 1);
     const month = d.getMonth();
     const year = d.getFullYear();
-    const monthProfit = flips
+    const monthProfit = soldFlips
       .filter((f) => {
-        const date = new Date(f.dateSold || f.dateBought || f.createdAt);
+        const date = realizedDateOf(f);
         return date.getMonth() === month && date.getFullYear() === year;
       })
       .reduce((sum, f) => sum + profitOf(f), 0);
@@ -75,17 +77,17 @@ export default function DashboardScreen() {
   });
   const maxMonthlyAbs = Math.max(...monthlyData.map((m) => Math.abs(m.value)), 1);
 
-  const thisMonthFlips = flips.filter((f) => {
-    const date = new Date(f.dateSold || f.dateBought || f.createdAt);
+  const thisMonthFlips = soldFlips.filter((f) => {
+    const date = realizedDateOf(f);
     return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
   });
   const thisMonthProfit = thisMonthFlips.reduce((sum, f) => sum + profitOf(f), 0);
 
-  const thisYearProfit = flips
-    .filter((f) => new Date(f.dateSold || f.dateBought || f.createdAt).getFullYear() === now.getFullYear())
+  const thisYearProfit = soldFlips
+    .filter((f) => realizedDateOf(f).getFullYear() === now.getFullYear())
     .reduce((sum, f) => sum + profitOf(f), 0);
 
-  const allTimeProfit = flips.reduce((sum, f) => sum + profitOf(f), 0);
+  const allTimeProfit = soldFlips.reduce((sum, f) => sum + profitOf(f), 0);
 
   // Progress toward a goal can't go below 0%, but the amount shown alongside it is
   // the real (possibly negative) monthly profit — a bad month should never be masked.
@@ -95,8 +97,9 @@ export default function DashboardScreen() {
   const platformData = PLATFORMS
     .map((p) => {
       const pFlips = flips.filter((f) => f.platform === p);
-      const pProfit = pFlips.reduce((sum, f) => sum + profitOf(f), 0);
-      return { platform: p, count: pFlips.length, profit: pProfit };
+      const pSold = pFlips.filter(isRealized);
+      const pProfit = pSold.reduce((sum, f) => sum + profitOf(f), 0);
+      return { platform: p, count: pFlips.length, soldCount: pSold.length, profit: pProfit };
     })
     .filter((p) => p.count > 0);
 
@@ -152,7 +155,7 @@ export default function DashboardScreen() {
           />
         </View>
         <View style={styles.metricsRow}>
-          <MetricCard label="Active Listings" value={activeListings.toString()} valueColor="#3b82f6" />
+          <MetricCard label="Open Jobs" value={openJobs.toString()} valueColor="#3b82f6" />
           <MetricCard label="Avg Margin" value={`${avgMargin.toFixed(1)}%`} subtitle="on sold items" />
         </View>
 
@@ -227,7 +230,7 @@ export default function DashboardScreen() {
                 <View>
                   <Text style={styles.platformName}>{p.platform}</Text>
                   <Text style={styles.platformCount}>
-                    {p.count} job{p.count !== 1 ? 's' : ''}
+                    {p.count} job{p.count !== 1 ? 's' : ''} · {p.soldCount} sold
                   </Text>
                 </View>
                 <Text
