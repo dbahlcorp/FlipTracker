@@ -31,6 +31,11 @@ const TEMPLATE_COLUMNS = [
   'packaging', 'shipping', 'marketplaceFees', 'sellingPrice', 'platform',
 ];
 
+const MATERIAL_COLUMNS = [
+  'name', 'type', 'costPerPiece', 'quantity', 'unit',
+  'width', 'height', 'thickness', 'supplier', 'notes', 'currency',
+];
+
 let dbPromise = null;
 
 function getDb() {
@@ -75,6 +80,21 @@ async function openAndInit() {
       marketplaceFees TEXT,
       sellingPrice TEXT,
       platform TEXT,
+      createdAt TEXT
+    );
+    CREATE TABLE IF NOT EXISTS materials (
+      id TEXT PRIMARY KEY NOT NULL,
+      name TEXT,
+      type TEXT,
+      costPerPiece TEXT,
+      quantity TEXT,
+      unit TEXT,
+      width TEXT,
+      height TEXT,
+      thickness TEXT,
+      supplier TEXT,
+      notes TEXT,
+      currency TEXT,
       createdAt TEXT
     );
   `);
@@ -247,10 +267,63 @@ export const deleteTemplate = async (id) => {
   return loadTemplates();
 };
 
+export const loadMaterials = async () => {
+  try {
+    const db = await getDb();
+    return await db.getAllAsync(
+      'SELECT * FROM materials ORDER BY name COLLATE NOCASE ASC, createdAt DESC'
+    );
+  } catch (e) {
+    console.error('Failed to load materials:', e);
+    return [];
+  }
+};
+
+export const addMaterial = async (material) => {
+  const db = await getDb();
+  const newMaterial = {
+    ...material,
+    id: `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+    createdAt: new Date().toISOString(),
+  };
+  await db.runAsync(
+    `INSERT INTO materials (id, ${MATERIAL_COLUMNS.join(', ')}, createdAt)
+     VALUES (?, ${MATERIAL_COLUMNS.map(() => '?').join(', ')}, ?)`,
+    [
+      newMaterial.id,
+      ...MATERIAL_COLUMNS.map((column) => newMaterial[column] || ''),
+      newMaterial.createdAt,
+    ]
+  );
+  return loadMaterials();
+};
+
+export const updateMaterial = async (id, updates) => {
+  const db = await getDb();
+  const existing = await db.getFirstAsync('SELECT * FROM materials WHERE id = ?', [id]);
+  if (!existing) return loadMaterials();
+  const merged = { ...existing, ...updates };
+  await db.runAsync(
+    `UPDATE materials SET ${MATERIAL_COLUMNS.map((column) => `${column} = ?`).join(', ')} WHERE id = ?`,
+    [...MATERIAL_COLUMNS.map((column) => merged[column] || ''), id]
+  );
+  return loadMaterials();
+};
+
+export const deleteMaterial = async (id) => {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM materials WHERE id = ?', [id]);
+  return loadMaterials();
+};
+
+export const calcMaterialValue = (material) =>
+  (parseFloat(material.costPerPiece) || 0) * (parseFloat(material.quantity) || 0);
+
 export const exportAllData = async () => {
-  const [flips, templates, goal, currency, labourRate, laserRate, theme] = await Promise.all([
+  const [flips, templates, materials, goal, currency, labourRate, laserRate, theme] = await Promise.all([
     loadFlips(),
     loadTemplates(),
+    loadMaterials(),
     loadGoal(),
     AsyncStorage.getItem('@flip_tracker_currency'),
     AsyncStorage.getItem('@flip_tracker_labour_rate'),
@@ -264,7 +337,9 @@ export const exportAllData = async () => {
 
   return {
     format: 'kerf-backup',
-    version: 1,
+    // v2 adds materials. Older Kerf builds reject this version instead of
+    // accepting the backup and silently dropping the inventory.
+    version: 2,
     exportedAt: new Date().toISOString(),
     settings: {
       goal,
@@ -275,24 +350,35 @@ export const exportAllData = async () => {
     },
     jobs: portableFlips,
     templates,
+    materials,
   };
 };
 
 const BACKUP_REQUIRED_JOB_FIELDS = ['id', 'itemName', 'createdAt'];
+const BACKUP_REQUIRED_MATERIAL_FIELDS = ['id', 'name', 'createdAt'];
 
 export const validateBackup = (data) => {
-  if (!data || data.format !== 'kerf-backup' || data.version !== 1) {
+  if (!data || data.format !== 'kerf-backup' || ![1, 2].includes(data.version)) {
     throw new Error('This is not a supported Kerf backup.');
   }
   if (!Array.isArray(data.jobs) || !Array.isArray(data.templates)) {
     throw new Error('The backup is missing jobs or templates.');
   }
+  if (data.materials !== undefined && !Array.isArray(data.materials)) {
+    throw new Error('The backup contains invalid materials.');
+  }
   if (data.jobs.some((job) => BACKUP_REQUIRED_JOB_FIELDS.some((field) => typeof job[field] !== 'string'))) {
     throw new Error('The backup contains an invalid job.');
+  }
+  if ((data.materials || []).some((material) =>
+    BACKUP_REQUIRED_MATERIAL_FIELDS.some((field) => typeof material[field] !== 'string')
+  )) {
+    throw new Error('The backup contains an invalid material.');
   }
   return {
     jobCount: data.jobs.length,
     templateCount: data.templates.length,
+    materialCount: data.materials?.length || 0,
     exportedAt: data.exportedAt,
   };
 };
@@ -309,7 +395,7 @@ export const importAllData = async (data) => {
 
   await db.execAsync('BEGIN IMMEDIATE TRANSACTION;');
   try {
-    await db.execAsync('DELETE FROM flips; DELETE FROM templates;');
+    await db.execAsync('DELETE FROM flips; DELETE FROM templates; DELETE FROM materials;');
     for (const job of restoredJobs) {
       await db.runAsync(
         `INSERT INTO flips (id, ${FLIP_COLUMNS.join(', ')}, createdAt)
@@ -329,6 +415,17 @@ export const importAllData = async (data) => {
           template.id || `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
           ...TEMPLATE_COLUMNS.map((column) => template[column] || ''),
           template.createdAt || new Date().toISOString(),
+        ]
+      );
+    }
+    for (const material of data.materials || []) {
+      await db.runAsync(
+        `INSERT INTO materials (id, ${MATERIAL_COLUMNS.join(', ')}, createdAt)
+         VALUES (?, ${MATERIAL_COLUMNS.map(() => '?').join(', ')}, ?)`,
+        [
+          material.id || `${Date.now()}-${Math.round(Math.random() * 1e6)}`,
+          ...MATERIAL_COLUMNS.map((column) => material[column] || ''),
+          material.createdAt || new Date().toISOString(),
         ]
       );
     }
@@ -365,6 +462,20 @@ export const saveGoal = async (goal) => {
   try {
     await AsyncStorage.setItem(GOAL_KEY, String(goal));
   } catch (e) {}
+};
+
+export const clearAllData = async () => {
+  const db = await getDb();
+  const rows = await db.getAllAsync('SELECT photo FROM flips');
+  await db.execAsync('BEGIN IMMEDIATE TRANSACTION;');
+  try {
+    await db.execAsync('DELETE FROM flips; DELETE FROM templates; DELETE FROM materials;');
+    await db.execAsync('COMMIT;');
+  } catch (error) {
+    await db.execAsync('ROLLBACK;');
+    throw error;
+  }
+  rows.forEach((row) => deletePhoto(row.photo));
 };
 
 export const getQuantity = (flip) => parseFloat(flip.quantity) || 1;
