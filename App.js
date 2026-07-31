@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { TouchableOpacity, Text } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { ScrollView, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { CurrencyProvider } from './src/context/CurrencyContext';
@@ -29,6 +30,96 @@ const ONBOARDING_KEY = '@kerf_onboarding_complete_v1';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const TAB_ITEM_WIDTH = 82;
+
+function ScrollableTabBar({ state, descriptors, navigation, theme }) {
+  const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
+  const scrollRef = useRef(null);
+
+  useEffect(() => {
+    const selectedTabCenter = state.index * TAB_ITEM_WIDTH + TAB_ITEM_WIDTH / 2;
+    const scrollX = Math.max(0, selectedTabCenter - screenWidth / 2);
+    scrollRef.current?.scrollTo({ x: scrollX, animated: true });
+  }, [screenWidth, state.index]);
+
+  return (
+    <View
+      style={{
+        backgroundColor: theme.tabBar,
+        paddingBottom: Math.max(insets.bottom, 8),
+      }}
+    >
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        bounces={false}
+        contentContainerStyle={{
+          paddingHorizontal: Math.max(insets.left, insets.right, 8),
+          paddingTop: 8,
+        }}
+      >
+        {state.routes.map((route, index) => {
+          const { options } = descriptors[route.key];
+          const focused = state.index === index;
+          const color = focused ? theme.brand : theme.textFaint;
+          const label = options.tabBarLabel ?? options.title ?? route.name;
+
+          const onPress = () => {
+            const event = navigation.emit({
+              type: 'tabPress',
+              target: route.key,
+              canPreventDefault: true,
+            });
+
+            if (!focused && !event.defaultPrevented) {
+              navigation.navigate(route.name, route.params);
+            }
+          };
+
+          const onLongPress = () => {
+            navigation.emit({ type: 'tabLongPress', target: route.key });
+          };
+
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={focused ? { selected: true } : {}}
+              accessibilityLabel={options.tabBarAccessibilityLabel}
+              testID={options.tabBarTestID}
+              onPress={onPress}
+              onLongPress={onLongPress}
+              activeOpacity={0.7}
+              style={{
+                width: TAB_ITEM_WIDTH,
+                minHeight: 50,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              {options.tabBarIcon?.({ focused, color, size: 26 })}
+              <Text
+                numberOfLines={1}
+                allowFontScaling
+                style={{
+                  color,
+                  fontSize: 9,
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  marginTop: 2,
+                }}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
+}
 
 function FlipsStack() {
   const { theme } = useTheme();
@@ -128,6 +219,7 @@ function AppNavigator() {
     <NavigationContainer>
       <StatusBar style={theme.statusBar} />
       <Tab.Navigator
+        tabBar={(props) => <ScrollableTabBar {...props} theme={theme} />}
         sceneContainerStyle={{ backgroundColor: theme.bg }}
         screenOptions={({ route }) => ({
           tabBarIcon: ({ focused, color, size }) => {
@@ -140,27 +232,6 @@ function AppNavigator() {
               Settings: focused ? 'settings' : 'settings-outline',
             };
             return <Ionicons name={icons[route.name]} size={26} color={color} />;
-          },
-          tabBarActiveTintColor: theme.brand,
-          tabBarInactiveTintColor: theme.textFaint,
-          tabBarAllowFontScaling: true,
-          tabBarStyle: {
-            backgroundColor: theme.tabBar,
-            borderTopWidth: 0,
-            elevation: 0,
-            shadowOpacity: 0,
-            paddingBottom: 10,
-            paddingTop: 8,
-            height: 68,
-          },
-          tabBarItemStyle: {
-            paddingHorizontal: 0,
-          },
-          tabBarLabelStyle: {
-            fontSize: 9,
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            marginTop: 2,
           },
           headerStyle: { backgroundColor: theme.header },
           headerTintColor: theme.headerText,
