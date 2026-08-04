@@ -41,18 +41,19 @@ export default function AddFlipScreen({ navigation }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.bg }}>
-      <TouchableOpacity style={styles.templateBar} onPress={() => setShowPicker(true)}>
-        <Text style={styles.templateBarText}>
-          {selectedTemplate ? `Using template: ${selectedTemplate.name}` : 'Use a Template'}
-        </Text>
-        <Text style={styles.templateBarAction}>{selectedTemplate ? 'Change' : 'Choose'}</Text>
-      </TouchableOpacity>
-
       <FlipForm
         key={selectedTemplate?.id || 'blank'}
         initialForm={buildInitialForm(currency, selectedTemplate)}
         submitLabel="Save Job"
         errorMessage="Failed to save job. Please try again."
+        headerContent={(
+          <TouchableOpacity style={styles.templateBar} onPress={() => setShowPicker(true)}>
+            <Text style={styles.templateBarText}>
+              {selectedTemplate ? `Using template: ${selectedTemplate.name}` : 'Use a Template'}
+            </Text>
+            <Text style={styles.templateBarAction}>{selectedTemplate ? 'Change' : 'Choose'}</Text>
+          </TouchableOpacity>
+        )}
         onSubmit={async (form) => {
           await addFlip(form);
           navigation.goBack();
@@ -113,6 +114,9 @@ const makeStyles = (t) =>
       backgroundColor: t.card,
       paddingHorizontal: 20,
       paddingVertical: 12,
+      marginHorizontal: -20,
+      marginTop: -20,
+      marginBottom: 20,
       borderBottomWidth: 1,
       borderBottomColor: t.border,
     },

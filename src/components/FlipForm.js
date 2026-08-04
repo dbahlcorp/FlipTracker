@@ -78,7 +78,7 @@ function InputField({ label, placeholder, value, onChange, keyboardType = 'defau
  * Shared add/edit form. The parent supplies the initial values, the submit
  * button label, and an onSubmit that persists the flip and navigates away.
  */
-export default function FlipForm({ initialForm, submitLabel, errorMessage, onSubmit }) {
+export default function FlipForm({ initialForm, submitLabel, errorMessage, onSubmit, headerContent }) {
   const { theme } = useTheme();
   const styles = makeStyles(theme);
   const { labourRate, laserRate } = useRates();
@@ -189,8 +189,11 @@ export default function FlipForm({ initialForm, submitLabel, errorMessage, onSub
       <ScrollView
         style={styles.container}
         contentContainerStyle={styles.content}
+        contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
       >
+        {headerContent}
+
         <InputField
           label="Item Name *"
           placeholder="e.g. Oak Coaster Set"
